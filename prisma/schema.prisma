@@ -10,134 +10,158 @@ datasource db {
   schemas  = ["puyuh"]
 }
 
-model admin {
-  user_id     Int           @id
-  users       users         @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
-  pengeluaran pengeluaran[]
-  produk      produk[]
+model User {
+  user_id   Int      @id @default(autoincrement())
+  nama      String
+  email     String   @unique
+  password  String
 
-  @@schema("puyuh")
+  Admin     Admin?
+  Customer  Customer?
+
+  @@schema(map: "puyuh")
 }
 
-model alamat {
-  alamat_id     Int       @id @default(autoincrement())
-  user_id       Int?
-  jalan         String
-  kecamatan     String?   @db.VarChar(100)
-  kota          String?   @db.VarChar(100)
-  provinsi      String?   @db.VarChar(100)
-  kode_pos      String?   @db.VarChar(10)
-  koordinat_lat Float?
-  koordinat_lng Float?
-  users         users?    @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
-  pesanan       pesanan[]
+model Admin {
+  admin_id Int    @id
+  User     User   @relation(fields: [admin_id], references: [user_id])
+  Pengeluaran Pengeluaran[]
 
-  @@schema("puyuh")
+  @@schema(map: "puyuh")
 }
 
-model customer {
-  user_id Int       @id
-  users   users     @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction)
-  pesanan pesanan[]
+model Customer {
+  customer_id Int     @id
+  alamat      String
+  User        User    @relation(fields: [customer_id], references: [user_id])
+  Pesanan     Pesanan[]
 
-  @@schema("puyuh")
+  @@schema(map: "puyuh")
 }
 
-model item_pesanan {
-  item_pesanan_id Int      @id @default(autoincrement())
-  pesanan_id      Int?
-  produk_id       Int?
-  jumlah          Int?
-  subtotal        Float?
-  pesanan         pesanan? @relation(fields: [pesanan_id], references: [pesanan_id], onDelete: Cascade, onUpdate: NoAction)
-  produk          produk?  @relation(fields: [produk_id], references: [produk_id], onUpdate: NoAction)
+model Kategori {
+  kategori_id Int       @id @default(autoincrement())
+  nama        String    @unique
+  deskripsi   String
+  Produk      Produk[]
 
-  @@schema("puyuh")
+  @@schema(map: "puyuh")
 }
 
-model karyawan {
-  karyawan_id Int          @id @default(autoincrement())
-  nama        String       @db.VarChar(100)
-  jabatan     String?      @db.VarChar(100)
-  gaji        Float?
-  pengiriman  pengiriman[]
+model Produk {
+  produk_id Int          @id @default(autoincrement())
+  nama      String
+  deskripsi String
+  harga     Float
+  stok      Int
+  kategori  Kategori?    @relation(fields: [kategori_id], references: [kategori_id])
+  kategori_id Int
 
-  @@schema("puyuh")
+  ItemPesanan ItemPesanan[]
+
+  @@schema(map: "puyuh")
 }
 
-model pendapatan {
-  pendapatan_id Int       @id @default(autoincrement())
-  pesanan_id    Int?
-  jumlah        Float?
-  tanggal       DateTime? @default(now()) @db.Timestamp(6)
-  pesanan       pesanan?  @relation(fields: [pesanan_id], references: [pesanan_id], onUpdate: NoAction)
+model Pesanan {
+  pesanan_id      Int            @id @default(autoincrement())
+  customer_id     Int
+  tanggal_pesanan DateTime
+  total_harga     Float
+  order_method    OrderMethod
+  status          OrderStatus
+  biaya_pengiriman  Float?
 
-  @@schema("puyuh")
+
+  Customer        Customer       @relation(fields: [customer_id], references: [customer_id])
+  ItemPesanan     ItemPesanan[]
+  Pendapatan      Pendapatan?
+  Pengiriman      Pengiriman?
+
+  @@schema(map: "puyuh")
 }
 
-model pengeluaran {
-  pengeluaran_id Int                                 @id @default(autoincrement())
-  admin_id       Int?
-  kategori       Unsupported("kategori_pengeluaran")
-  deskripsi      String?
-  jumlah         Float?
-  tanggal        DateTime?                           @default(now()) @db.Timestamp(6)
-  admin          admin?                              @relation(fields: [admin_id], references: [user_id], onUpdate: NoAction)
+enum OrderMethod {
+  PICKUP
+  DELIVERY
 
-  @@schema("puyuh")
+  @@schema(map: "puyuh")
 }
 
-model pengiriman {
-  pengiriman_id Int       @id @default(autoincrement())
-  karyawan_id   Int?
-  pesanan_id    Int?
-  nama_barang   String?   @db.VarChar(100)
-  berat_barang  Float?
-  karyawan      karyawan? @relation(fields: [karyawan_id], references: [karyawan_id], onUpdate: NoAction)
-  pesanan       pesanan?  @relation(fields: [pesanan_id], references: [pesanan_id], onUpdate: NoAction)
+enum OrderStatus {
+  PENDING_PAYMENT
+  CURRENTLY_SHIPPING
+  COMPLETED
+  CANCELED
 
-  @@schema("puyuh")
+  @@schema(map: "puyuh")
 }
 
-model pesanan {
-  pesanan_id         Int            @id @default(autoincrement())
-  customer_id        Int?
-  alamat_id          Int?
-  tanggal_pesanan    DateTime?      @default(now()) @db.Timestamp(6)
-  total_harga        Float?
-  status_pesanan     String?        @db.VarChar(50)
-  metode_pengambilan String?        @db.VarChar(50)
-  item_pesanan       item_pesanan[]
-  pendapatan         pendapatan[]
-  pengiriman         pengiriman[]
-  alamat             alamat?        @relation(fields: [alamat_id], references: [alamat_id], onUpdate: NoAction)
-  customer           customer?      @relation(fields: [customer_id], references: [user_id], onUpdate: NoAction)
+model ItemPesanan {
+  item_pesanan_id Int     @id @default(autoincrement())
+  pesanan_id      Int
+  produk_id       Int
+  jumlah          Int
+  subtotal        Float
 
-  @@schema("puyuh")
+  Pesanan         Pesanan @relation(fields: [pesanan_id], references: [pesanan_id])
+  Produk          Produk  @relation(fields: [produk_id], references: [produk_id])
+
+  @@schema(map: "puyuh")
 }
 
-model produk {
-  produk_id    Int                            @id @default(autoincrement())
-  nama         String                         @db.VarChar(100)
-  deskripsi    String?
-  harga        Float
-  stok         Int
-  kategori     Unsupported("kategori_produk")
-  admin_id     Int?
-  item_pesanan item_pesanan[]
-  admin        admin?                         @relation(fields: [admin_id], references: [user_id], onUpdate: NoAction)
+model Pengiriman {
+  pengiriman_id Int      @id @default(autoincrement())
+  pesanan_id    Int      @unique
+  karyawan_id   Int
+  nama_barang   String
+  berat_barang  Float
 
-  @@schema("puyuh")
+  Pesanan       Pesanan  @relation(fields: [pesanan_id], references: [pesanan_id])
+  Karyawan      Karyawan @relation(fields: [karyawan_id], references: [karyawan_id])
+
+  @@schema(map: "puyuh")
 }
 
-model users {
-  user_id  Int       @id @default(autoincrement())
-  nama     String    @db.VarChar(100)
-  email    String    @unique @db.VarChar(100)
-  password String    @db.VarChar(100)
-  admin    admin?
-  alamat   alamat[]
-  customer customer?
+model Pendapatan {
+  pendapatan_id Int      @id @default(autoincrement())
+  pesanan_id    Int      @unique
+  jumlah        Float
+  tanggal       DateTime
 
-  @@schema("puyuh")
+  Pesanan       Pesanan  @relation(fields: [pesanan_id], references: [pesanan_id])
+
+  @@schema(map: "puyuh")
 }
+
+model Pengeluaran {
+  pengeluaran_id Int                  @id @default(autoincrement())
+  admin_id       Int
+  kategori       KategoriPengeluaran
+  deskripsi      String
+  jumlah         Float
+  tanggal        DateTime
+
+  Admin          Admin               @relation(fields: [admin_id], references: [admin_id])
+
+  @@schema(map: "puyuh")
+}
+
+enum KategoriPengeluaran {
+  PAKAN
+  GAJI_KARYAWAN
+
+  @@schema(map: "puyuh")
+}
+
+model Karyawan {
+  karyawan_id Int      @id @default(autoincrement())
+  nama        String
+  jabatan     String
+  gaji        Float
+  Pengiriman  Pengiriman[]
+
+  @@schema(map: "puyuh")
+}
+
+
+
