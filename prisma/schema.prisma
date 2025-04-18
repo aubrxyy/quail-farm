@@ -11,37 +11,37 @@ datasource db {
 }
 
 model User {
-  user_id   Int      @id @default(autoincrement())
-  nama      String
-  email     String   @unique
-  password  String
+  user_id  Int    @id @default(autoincrement())
+  nama     String
+  email    String @unique
+  password String
 
-  Admin     Admin?
-  Customer  Customer?
+  Admin    Admin?
+  Customer Customer?
 
   @@schema(map: "puyuh")
 }
 
 model Admin {
-  admin_id Int    @id
-  User     User   @relation(fields: [admin_id], references: [user_id])
+  admin_id    Int           @id
+  User        User          @relation(fields: [admin_id], references: [user_id])
   Pengeluaran Pengeluaran[]
 
   @@schema(map: "puyuh")
 }
 
 model Customer {
-  customer_id Int     @id
+  customer_id Int       @id
   alamat      String
-  User        User    @relation(fields: [customer_id], references: [user_id])
+  User        User      @relation(fields: [customer_id], references: [user_id])
   Pesanan     Pesanan[]
 
   @@schema(map: "puyuh")
 }
 
 model Kategori {
-  kategori_id Int       @id @default(autoincrement())
-  nama        String    @unique
+  kategori_id Int      @id @default(autoincrement())
+  nama        String   @unique
   deskripsi   String
   Produk      Produk[]
 
@@ -49,33 +49,32 @@ model Kategori {
 }
 
 model Produk {
-  produk_id Int          @id @default(autoincrement())
-  nama      String
-  deskripsi String
-  harga     Float
-  stok      Int
-  kategori  Kategori?    @relation(fields: [kategori_id], references: [kategori_id])
+  produk_id   Int       @id @default(autoincrement())
+  nama        String
+  deskripsi   String
+  harga       Float
+  stok        Int
+  image_url   String
+  kategori    Kategori? @relation(fields: [kategori_id], references: [kategori_id])
   kategori_id Int
-
   ItemPesanan ItemPesanan[]
 
   @@schema(map: "puyuh")
 }
 
 model Pesanan {
-  pesanan_id      Int            @id @default(autoincrement())
-  customer_id     Int
-  tanggal_pesanan DateTime
-  total_harga     Float
-  order_method    OrderMethod
-  status          OrderStatus
-  biaya_pengiriman  Float?
+  pesanan_id       Int         @id @default(autoincrement())
+  customer_id      Int
+  tanggal_pesanan  DateTime
+  total_harga      Float
+  order_method     OrderMethod
+  status           OrderStatus
+  biaya_pengiriman Float?
 
-
-  Customer        Customer       @relation(fields: [customer_id], references: [customer_id])
-  ItemPesanan     ItemPesanan[]
-  Pendapatan      Pendapatan?
-  Pengiriman      Pengiriman?
+  Customer    Customer      @relation(fields: [customer_id], references: [customer_id])
+  ItemPesanan ItemPesanan[]
+  Pendapatan  Pendapatan?
+  Pengiriman  Pengiriman?
 
   @@schema(map: "puyuh")
 }
@@ -97,27 +96,27 @@ enum OrderStatus {
 }
 
 model ItemPesanan {
-  item_pesanan_id Int     @id @default(autoincrement())
+  item_pesanan_id Int   @id @default(autoincrement())
   pesanan_id      Int
   produk_id       Int
   jumlah          Int
   subtotal        Float
 
-  Pesanan         Pesanan @relation(fields: [pesanan_id], references: [pesanan_id])
-  Produk          Produk  @relation(fields: [produk_id], references: [produk_id])
+  Pesanan Pesanan @relation(fields: [pesanan_id], references: [pesanan_id])
+  Produk  Produk  @relation(fields: [produk_id], references: [produk_id])
 
   @@schema(map: "puyuh")
 }
 
 model Pengiriman {
-  pengiriman_id Int      @id @default(autoincrement())
-  pesanan_id    Int      @unique
+  pengiriman_id Int    @id @default(autoincrement())
+  pesanan_id    Int    @unique
   karyawan_id   Int
   nama_barang   String
   berat_barang  Float
 
-  Pesanan       Pesanan  @relation(fields: [pesanan_id], references: [pesanan_id])
-  Karyawan      Karyawan @relation(fields: [karyawan_id], references: [karyawan_id])
+  Pesanan  Pesanan  @relation(fields: [pesanan_id], references: [pesanan_id])
+  Karyawan Karyawan @relation(fields: [karyawan_id], references: [karyawan_id])
 
   @@schema(map: "puyuh")
 }
@@ -128,20 +127,20 @@ model Pendapatan {
   jumlah        Float
   tanggal       DateTime
 
-  Pesanan       Pesanan  @relation(fields: [pesanan_id], references: [pesanan_id])
+  Pesanan Pesanan @relation(fields: [pesanan_id], references: [pesanan_id])
 
   @@schema(map: "puyuh")
 }
 
 model Pengeluaran {
-  pengeluaran_id Int                  @id @default(autoincrement())
+  pengeluaran_id Int                 @id @default(autoincrement())
   admin_id       Int
   kategori       KategoriPengeluaran
   deskripsi      String
   jumlah         Float
   tanggal        DateTime
 
-  Admin          Admin               @relation(fields: [admin_id], references: [admin_id])
+  Admin Admin @relation(fields: [admin_id], references: [admin_id])
 
   @@schema(map: "puyuh")
 }
@@ -154,7 +153,7 @@ enum KategoriPengeluaran {
 }
 
 model Karyawan {
-  karyawan_id Int      @id @default(autoincrement())
+  karyawan_id Int          @id @default(autoincrement())
   nama        String
   jabatan     String
   gaji        Float
@@ -162,6 +161,3 @@ model Karyawan {
 
   @@schema(map: "puyuh")
 }
-
-
-
