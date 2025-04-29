@@ -12,12 +12,14 @@ const updateEmployeeSchema = z.object({
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id } = await context.params; // Await params
+    const employeeId = parseInt(id);
+
     const employee = await prisma.employee.findUnique({
-      where: { id }
+      where: { id: employeeId },
     });
 
     if (!employee) {
@@ -32,22 +34,23 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id } = await context.params; // Await params
+    const employeeId = parseInt(id);
     const body = await request.json();
-    
+
     const parsed = updateEmployeeSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
     }
-    
+
     const employee = await prisma.employee.update({
-      where: { id },
-      data: parsed.data
+      where: { id: employeeId },
+      data: parsed.data,
     });
-    
+
     return NextResponse.json(employee);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update employee' }, { status: 500 });
@@ -56,11 +59,13 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(params.id);
-    await prisma.employee.delete({ where: { id } });
+    const { id } = await context.params; // Await params
+    const employeeId = parseInt(id);
+
+    await prisma.employee.delete({ where: { id: employeeId } });
     return NextResponse.json({ message: 'Employee deleted successfully' });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete employee' }, { status: 500 });

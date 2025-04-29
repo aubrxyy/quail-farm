@@ -12,13 +12,15 @@ const updateProductSchema = z.object({
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id } = await context.params; // Await params
+    const productId = parseInt(id);
+
     const product = await prisma.product.findUnique({
-      where: { id },
-      include: { orders: true }
+      where: { id: productId },
+      include: { orders: true },
     });
 
     if (!product) {
@@ -33,22 +35,23 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(params.id);
+    const { id } = await context.params; // Await params
+    const productId = parseInt(id);
     const body = await request.json();
-    
+
     const parsed = updateProductSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
     }
-    
+
     const product = await prisma.product.update({
-      where: { id },
-      data: parsed.data
+      where: { id: productId },
+      data: parsed.data,
     });
-    
+
     return NextResponse.json(product);
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
@@ -57,11 +60,13 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(params.id);
-    await prisma.product.delete({ where: { id } });
+    const { id } = await context.params; // Await params
+    const productId = parseInt(id);
+
+    await prisma.product.delete({ where: { id: productId } });
     return NextResponse.json({ message: 'Product deleted successfully' });
   } catch (error) {
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
