@@ -28,7 +28,7 @@ export default function Register() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="bg-[#E6DCB8] h-screen flex flex-col items-center justify-center"
+      className="bg-[#E6DCB8] text-black h-screen flex flex-col items-center justify-center"
     >
       <div>
         <label htmlFor="name">Name</label>
