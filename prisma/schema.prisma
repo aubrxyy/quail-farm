@@ -1,3 +1,6 @@
+// File: prisma/schema.prisma
+// Prisma schema for PostgreSQL
+
 generator client {
   provider        = "prisma-client-js"
   output          = "../lib/generated/prisma"
@@ -10,154 +13,77 @@ datasource db {
   schemas  = ["puyuh"]
 }
 
+enum Role {
+  ADMIN
+  USER
+
+  @@schema (map: "puyuh")
+}
+
 model User {
-  user_id  Int    @id @default(autoincrement())
-  nama     String
-  email    String @unique
-  password String
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  Admin    Admin?
-  Customer Customer?
-
-  @@schema(map: "puyuh")
+  @@schema (map: "puyuh")
 }
 
-model Admin {
-  admin_id    Int           @id
-  User        User          @relation(fields: [admin_id], references: [user_id])
-  Pengeluaran Pengeluaran[]
-
-  @@schema(map: "puyuh")
-}
-
-model Customer {
-  customer_id Int       @id
-  alamat      String
-  User        User      @relation(fields: [customer_id], references: [user_id])
-  Pesanan     Pesanan[]
-
-  @@schema(map: "puyuh")
-}
-
-model Kategori {
-  kategori_id Int      @id @default(autoincrement())
-  nama        String   @unique
-  deskripsi   String
-  Produk      Produk[]
-
-  @@schema(map: "puyuh")
-}
-
-model Produk {
-  produk_id   Int       @id @default(autoincrement())
-  nama        String
+model Product {
+  id          Int     @id @default(autoincrement())
+  name        String
+  gambar      String
   deskripsi   String
   harga       Float
-  stok        Int
-  image_url   String
-  kategori    Kategori? @relation(fields: [kategori_id], references: [kategori_id])
-  kategori_id Int
-  ItemPesanan ItemPesanan[]
+  stock       Int
+  orders      Order[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
-  @@schema(map: "puyuh")
+  @@schema (map: "puyuh")
 }
 
-model Pesanan {
-  pesanan_id       Int         @id @default(autoincrement())
-  customer_id      Int
-  tanggal_pesanan  DateTime
-  total_harga      Float
-  order_method     OrderMethod
-  status           OrderStatus
-  biaya_pengiriman Float?
+model Order {
+  id              Int      @id @default(autoincrement())
+  customerName    String
+  customerAddress String
+  orderDate       DateTime
+  orderType       String
+  orderAmount     Int
+  totalPrice      Float
+  status          String
+  productId       Int
+  product         Product @relation(fields: [productId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
-  Customer    Customer      @relation(fields: [customer_id], references: [customer_id])
-  ItemPesanan ItemPesanan[]
-  Pendapatan  Pendapatan?
-  Pengiriman  Pengiriman?
-
-  @@schema(map: "puyuh")
+    @@schema (map: "puyuh")
 }
 
-enum OrderMethod {
-  PICKUP
-  DELIVERY
+model Employee {
+  id         Int     @id @default(autoincrement())
+  employeeId String @unique
+  name       String
+  email      String @unique
+  address    String
+  salary     Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  @@schema(map: "puyuh")
+    @@schema (map: "puyuh")
 }
 
-enum OrderStatus {
-  PENDING_PAYMENT
-  CURRENTLY_SHIPPING
-  COMPLETED
-  CANCELED
+// --- Next steps ---
+// 1. npx prisma migrate dev --name init
+// 2. npx prisma generate
 
-  @@schema(map: "puyuh")
-}
-
-model ItemPesanan {
-  item_pesanan_id Int   @id @default(autoincrement())
-  pesanan_id      Int
-  produk_id       Int
-  jumlah          Int
-  subtotal        Float
-
-  Pesanan Pesanan @relation(fields: [pesanan_id], references: [pesanan_id])
-  Produk  Produk  @relation(fields: [produk_id], references: [produk_id])
-
-  @@schema(map: "puyuh")
-}
-
-model Pengiriman {
-  pengiriman_id Int    @id @default(autoincrement())
-  pesanan_id    Int    @unique
-  karyawan_id   Int
-  nama_barang   String
-  berat_barang  Float
-
-  Pesanan  Pesanan  @relation(fields: [pesanan_id], references: [pesanan_id])
-  Karyawan Karyawan @relation(fields: [karyawan_id], references: [karyawan_id])
-
-  @@schema(map: "puyuh")
-}
-
-model Pendapatan {
-  pendapatan_id Int      @id @default(autoincrement())
-  pesanan_id    Int      @unique
-  jumlah        Float
-  tanggal       DateTime
-
-  Pesanan Pesanan @relation(fields: [pesanan_id], references: [pesanan_id])
-
-  @@schema(map: "puyuh")
-}
-
-model Pengeluaran {
-  pengeluaran_id Int                 @id @default(autoincrement())
-  admin_id       Int
-  kategori       KategoriPengeluaran
-  deskripsi      String
-  jumlah         Float
-  tanggal        DateTime
-
-  Admin Admin @relation(fields: [admin_id], references: [admin_id])
-
-  @@schema(map: "puyuh")
-}
-
-enum KategoriPengeluaran {
-  PAKAN
-  GAJI_KARYAWAN
-
-  @@schema(map: "puyuh")
-}
-
-model Karyawan {
-  karyawan_id Int          @id @default(autoincrement())
-  nama        String
-  jabatan     String
-  gaji        Float
-  Pengiriman  Pengiriman[]
-
-  @@schema(map: "puyuh")
-}
+// --- API Endpoints to Implement ---
+// - /api/products/index.ts     → POST
+// - /api/products/[id].ts      → GET, PUT, DELETE
+// - /api/orders/index.ts       → POST
+// - /api/orders/[id].ts        → GET, PUT, DELETE
+// - /api/employees/index.ts    → POST
+// - /api/employees/[id].ts     → GET, PUT, DELETE
