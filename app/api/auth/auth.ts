@@ -1,13 +1,11 @@
 "use server"
 
 import bcrypt from "bcrypt";
-import { SignupFormSchema } from "@/lib/definitions";
-import { PrismaClient } from "@/lib/generated/prisma";
+import { LoginFormSchema, SignupFormSchema } from "@/lib/definitions";
+import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/session";
 import { redirect } from "next/navigation";
 import { deleteSession } from "@/lib/session";
-
-const prisma = new PrismaClient();
 
 export async function signup(formData: FormData) {
   const validatedFields = SignupFormSchema.safeParse({
@@ -37,16 +35,15 @@ export async function signup(formData: FormData) {
 
     await createSession(user.id);
     redirect('/');
-    return { user };
   } catch (error) {
     return { errors: { email: ["Email is already in use."] } };
   }
 }
 
 export async function login(formData: FormData) {
-  const validatedFields = SignupFormSchema.safeParse({
-    email: formData.get('email'),
-    password: formData.get('password'),
+  const validatedFields = LoginFormSchema.safeParse({
+    email: formData.get('email') as string,
+    password: formData.get('password') as string,
   });
 
   if (!validatedFields.success) {
@@ -73,8 +70,10 @@ export async function login(formData: FormData) {
     }
 
     await createSession(user.id);
-    redirect('/');
+
+    return { success: true };
   } catch (error) {
+    console.error("Login error:", error);
     return { errors: { general: ["An error occurred. Please try again."] } };
   }
 }
