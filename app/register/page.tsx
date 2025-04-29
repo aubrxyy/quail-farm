@@ -15,8 +15,7 @@ export default function Register() {
     setSuccess(false)
 
     const formData = new FormData(e.currentTarget)
-    const result = await signup({}, formData) // Call your server action directly
-
+    const result = await signup(formData)
     if (result.errors) {
       setErrors(result.errors)
     } else {

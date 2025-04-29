@@ -1,12 +1,15 @@
 "use server"
 
-import { SignupFormSchema, FormState } from "../../lib/definitions";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
+import { SignupFormSchema } from "@/lib/definitions";
+import { PrismaClient } from "@/lib/generated/prisma";
+import { createSession } from "@/lib/session";
+import { redirect } from "next/navigation";
+import { deleteSession } from "@/lib/session";
 
 const prisma = new PrismaClient();
 
-export async function signup(state: FormState, formData: FormData) {
+export async function signup(formData: FormData) {
   const validatedFields = SignupFormSchema.safeParse({
     name: formData.get('name'),
     email: formData.get('email'),
@@ -32,8 +35,51 @@ export async function signup(state: FormState, formData: FormData) {
       },
     });
 
+    await createSession(user.id);
+    redirect('/');
     return { user };
   } catch (error) {
     return { errors: { email: ["Email is already in use."] } };
   }
+}
+
+export async function login(formData: FormData) {
+  const validatedFields = SignupFormSchema.safeParse({
+    email: formData.get('email'),
+    password: formData.get('password'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+    };
+  }
+
+  const { email, password } = validatedFields.data;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return { errors: { email: ["Invalid email or password."] } };
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return { errors: { password: ["Invalid email or password."] } };
+    }
+
+    await createSession(user.id);
+    redirect('/');
+  } catch (error) {
+    return { errors: { general: ["An error occurred. Please try again."] } };
+  }
+}
+
+export async function logout() {
+  deleteSession()
+  redirect('/login')
 }
