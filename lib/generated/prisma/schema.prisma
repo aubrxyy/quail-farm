@@ -1,0 +1,89 @@
+// File: prisma/schema.prisma
+// Prisma schema for PostgreSQL
+
+generator client {
+  provider        = "prisma-client-js"
+  output          = "../lib/generated/prisma"
+  previewFeatures = ["multiSchema"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  schemas  = ["puyuh"]
+}
+
+enum Role {
+  ADMIN
+  USER
+
+  @@schema(map: "puyuh")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema(map: "puyuh")
+}
+
+model Product {
+  id        Int      @id @default(autoincrement())
+  name      String
+  gambar    String
+  deskripsi String
+  harga     Float
+  stock     Int
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@schema(map: "puyuh")
+}
+
+model Order {
+  id              Int      @id @default(autoincrement())
+  customerName    String
+  customerAddress String
+  orderDate       DateTime
+  orderType       String
+  orderAmount     Int
+  totalPrice      Float
+  status          String
+  productId       Int
+  product         Product  @relation(fields: [productId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@schema(map: "puyuh")
+}
+
+model Employee {
+  id         Int      @id @default(autoincrement())
+  employeeId String   @unique
+  name       String
+  email      String   @unique
+  address    String
+  salary     Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@schema(map: "puyuh")
+}
+
+// --- Next steps ---
+// 1. npx prisma migrate dev --name init
+// 2. npx prisma generate
+
+// --- API Endpoints to Implement ---
+// - /api/products/index.ts     → POST
+// - /api/products/[id].ts      → GET, PUT, DELETE
+// - /api/orders/index.ts       → POST
+// - /api/orders/[id].ts        → GET, PUT, DELETE
+// - /api/employees/index.ts    → POST
+// - /api/employees/[id].ts     → GET, PUT, DELETE
