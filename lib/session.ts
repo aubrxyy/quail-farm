@@ -17,7 +17,6 @@ export async function encrypt(payload: SessionPayload) {
 export async function decrypt(session: string | undefined = '') {
   try {
     if (!session) {
-      console.log('No session token provided');
       return null;
     }
 
