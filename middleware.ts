@@ -1,33 +1,65 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { decrypt } from '@/lib/session'
-import { cookies } from 'next/headers'
- 
-const protectedRoutes = ['/admin']
-const publicRoutes = ['/login', '/register', '/']
- 
-export default async function middleware(req: NextRequest) {
-  const path = req.nextUrl.pathname
-  const isProtectedRoute = protectedRoutes.includes(path)
-  const isPublicRoute = publicRoutes.includes(path)
- 
-  const cookie = (await cookies()).get('session')?.value
-  const session = await decrypt(cookie)
- 
-  if (isProtectedRoute && !session?.userId) {
-    return NextResponse.redirect(new URL('/', req.nextUrl))
+import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { decrypt } from '@/lib/session';
+
+export async function middleware(request: Request) {
+  const cookieStore = await cookies();
+  const sessionToken = cookieStore.get('session')?.value;
+
+  const url = new URL(request.url);
+
+  if (url.pathname === '/register' || url.pathname === '/login') {
+    if (sessionToken) {
+      try {
+        const session = await decrypt(sessionToken);
+
+        if (session?.role === 'ADMIN') {
+          return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+        }
+
+        return NextResponse.redirect(new URL('/', request.url));
+      } catch (error) {
+        console.error('Failed to verify session:', error);
+      }
+    }
+    return NextResponse.next();
   }
- 
-  if (
-    isPublicRoute &&
-    session?.userId &&
-    !req.nextUrl.pathname.startsWith('/admin')
-  ) {
-    return NextResponse.redirect(new URL('/admin/dashboard', req.nextUrl))
+
+  if (url.pathname === '/') {
+    if (sessionToken) {
+      try {
+        const session = await decrypt(sessionToken);
+
+        if (session?.role === 'ADMIN') {
+          return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+        }
+      } catch (error) {
+        console.error('Failed to verify session:', error);
+      }
+    }
+    return NextResponse.next();
   }
- 
-  return NextResponse.next()
+
+  if (url.pathname.startsWith('/admin')) {
+    if (!sessionToken) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+
+    try {
+      const session = await decrypt(sessionToken);
+
+      if (session?.role !== 'ADMIN') {
+        return NextResponse.redirect(new URL('/login', request.url));
+      }
+    } catch (error) {
+      console.error('Failed to verify session:', error);
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+  }
+
+  return NextResponse.next();
 }
- 
+
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
-}
+  matcher: ['/admin/:path*', '/register', '/login', '/'],
+};
