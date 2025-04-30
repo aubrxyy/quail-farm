@@ -1,0 +1,96 @@
+// app/profile/page.tsx
+'use client';
+import { useState } from 'react';
+
+export default function Profile() {
+  const [fullName, setFirstName] = useState('Tony Boss');
+  const [email, setEmail] = useState('hi.avitex@gmail.com');
+  const [phone, setPhone] = useState('(12) 345 678 910');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const handleUpdateAccount = () => {
+    // Logika untuk memperbarui akun
+    console.log('Account updated:', { fullName, email, phone });
+  };
+
+  return (
+    <div className='bg-[#F7F4E8] min-h-screen p-10 text-black'>
+      <div className="flex flex-col md:flex-row p-6 ml-8">
+        <div className="flex flex-col items-center md:w-1/3 mb-6 bg-[#E6DCB8] mr-8 rounded rounded-3xl">
+          <div className="w-24 h-24 rounded-full bg-gray-300 mb-4 mt-10"></div>
+          <h2 className="text-lg font-bold">{`${fullName}`}</h2>
+          <p className="text-gray-600">{email}</p>
+          <p className="text-gray-600">{phone}</p>
+
+          <div className="mt-4 ml-4">
+            <button className="bg-gray-200 px-4 py-2 rounded">Account Details</button>
+            <button className="bg-gray-200 px-4 py-2 rounded ml-2">My Address</button>
+          </div>
+        </div>
+        <div className="md:w-2/3 ml-4">
+          <h3 className="text-xl font-bold mb-4">Informasi Akun</h3>
+          <form onSubmit={(e) => { e.preventDefault(); handleUpdateAccount(); }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium">Full Name</label>
+              <input
+                type="text"
+                value={fullName}
+                onChange={(e) => setFirstName(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Email*</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Phone*</label>
+              <input
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                required
+              />
+            </div>
+          </form>
+          <h3 className="text-xl font-bold mb-4 mt-6">Change Password</h3>
+          <form onSubmit={(e) => { e.preventDefault(); handleUpdateAccount(); }} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium">New Password*</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Confirm Password*</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                required
+              />
+            </div>
+            <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded mt-4">
+              UPDATE ACCOUNT
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
