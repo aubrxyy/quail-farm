@@ -33,7 +33,7 @@ export async function signup(formData: FormData) {
       },
     });
 
-    await createSession(user.id);
+    await createSession(user.id, user.role);
     redirect('/');
   } catch (error) {
     return { errors: { email: ["Email is already in use."] } };
@@ -69,7 +69,7 @@ export async function login(formData: FormData) {
       return { errors: { password: ["Invalid email or password."] } };
     }
 
-    await createSession(user.id);
+    await createSession(user.id, user.role);
 
     return { success: true };
   } catch (error) {
