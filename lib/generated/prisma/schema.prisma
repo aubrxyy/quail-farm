@@ -11,27 +11,32 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int           @id @default(autoincrement())
+  name        String
+  email       String        @unique
+  password    String
+  role        Role          @default(USER)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Cart        Cart[]
+  Transaction Transaction[]
+  Address     Address[]
 
   @@schema("puyuh")
 }
 
 model Product {
-  id        Int      @id @default(autoincrement())
-  name      String
-  gambar    String
-  deskripsi String
-  harga     Float
-  stock     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  orders    Order[]
+  id           Int           @id @default(autoincrement())
+  name         String
+  gambar       String
+  deskripsi    String
+  harga        Float
+  stock        Int
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  orders       Order[]
+  transactions Transaction[]
+  Cart         Cart[]
 
   @@schema("puyuh")
 }
@@ -44,7 +49,7 @@ model Order {
   orderType       String
   orderAmount     Int
   totalPrice      Float
-  status          String
+  status          Status   @default(PROCESSING)
   productId       Int
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -66,9 +71,64 @@ model Employee {
   @@schema("puyuh")
 }
 
+model Cart {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@schema("puyuh")
+}
+
+model Address {
+  id         Int      @id @default(autoincrement())
+  street     String
+  city       String
+  province   String
+  postalCode String
+  userId     Int
+  createdAt  DateTime @default(now())
+
+  // Relation
+  user User @relation(fields: [userId], references: [id])
+
+  @@schema("puyuh")
+}
+
+model Transaction {
+  id            Int      @id @default(autoincrement())
+  transactionId String   @unique
+  userId        Int
+  productId     Int
+  amount        Int
+  totalPrice    Float
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+  product       Product  @relation(fields: [productId], references: [id])
+
+  @@schema("puyuh")
+}
+
 enum Role {
   ADMIN
   USER
+
+  @@schema("puyuh")
+}
+
+enum Status {
+  PENDING
+  PROCESSING
+  COMPLETED
+  ONHOLD
+  REJECTED
+  INTRANSIT
 
   @@schema("puyuh")
 }
