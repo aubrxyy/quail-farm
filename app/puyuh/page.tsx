@@ -37,7 +37,7 @@ export default function Puyuh() {
               alt="Puyuh"
               width={350}
               height={350}
-              className="rounded-lg"
+              className="rounded-lg pt-8"
             />
           </div>
           <div className="ml-6 flex-grow">

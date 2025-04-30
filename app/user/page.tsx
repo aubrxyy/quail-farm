@@ -9,9 +9,15 @@ export default function Profile() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleUpdateAccount = () => {
     // Logika untuk memperbarui akun
+    if (newPassword !== confirmPassword) {
+        setErrorMessage('Password baru dan konfirmasi password tidak cocok.');
+        return;
+    }
+    setErrorMessage(''); // Reset pesan kesalahan jika validasi berhasil
     console.log('Account updated:', { fullName, email, phone });
   };
 
@@ -24,16 +30,16 @@ export default function Profile() {
           <p className="text-gray-600">{email}</p>
           <p className="text-gray-600">{phone}</p>
 
-          <div className="mt-4 ml-4">
-            <button className="bg-gray-200 px-4 py-2 rounded">Account Details</button>
-            <button className="bg-gray-200 px-4 py-2 rounded ml-2">My Address</button>
+          <div className="mt-8 ml-2 flex flex-col">
+            <button className="bg-gray-200 px-4 py-2 rounded">Order Saya</button>
+            <button className="bg-gray-200 px-4 py-2 rounded mt-2">Alamat</button>
           </div>
         </div>
         <div className="md:w-2/3 ml-4">
           <h3 className="text-xl font-bold mb-4">Informasi Akun</h3>
           <form onSubmit={(e) => { e.preventDefault(); handleUpdateAccount(); }} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium">Full Name</label>
+              <label className="block text-sm font-medium">Nama Lengkap</label>
               <input
                 type="text"
                 value={fullName}
@@ -43,7 +49,7 @@ export default function Profile() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium">Email*</label>
+              <label className="block text-sm font-medium">Email</label>
               <input
                 type="email"
                 value={email}
@@ -53,7 +59,7 @@ export default function Profile() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium">Phone*</label>
+              <label className="block text-sm font-medium">Nomor Telepon</label>
               <input
                 type="text"
                 value={phone}
@@ -63,10 +69,10 @@ export default function Profile() {
               />
             </div>
           </form>
-          <h3 className="text-xl font-bold mb-4 mt-6">Change Password</h3>
+          <h3 className="text-xl font-bold mb-4 mt-6">Ubah Password</h3>
           <form onSubmit={(e) => { e.preventDefault(); handleUpdateAccount(); }} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium">New Password*</label>
+              <label className="block text-sm font-medium">Password Baru</label>
               <input
                 type="password"
                 value={newPassword}
@@ -76,17 +82,18 @@ export default function Profile() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium">Confirm Password*</label>
+              <label className="block text-sm font-medium">Konfirmasi Password</label>
               <input
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="mt-1 block w-full border border-gray-300 rounded-md p-2"
+                className={`mt-1 block w-full border ${errorMessage ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 transition duration-300 ease-in-out`}
                 required
               />
+              {errorMessage && <p className="text-red-500 text-sm mt-1 animate-pulse">{errorMessage}</p>}
             </div>
             <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded mt-4">
-              UPDATE ACCOUNT
+              Perbarui Akun
             </button>
           </form>
         </div>
