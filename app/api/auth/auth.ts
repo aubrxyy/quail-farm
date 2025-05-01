@@ -69,9 +69,11 @@ export async function login(formData: FormData) {
       return { errors: { password: ["Invalid email or password."] } };
     }
 
-    await createSession(user.id, user.role);
+    const token = await createSession(user.id, user.role);
 
-    return { success: true };
+    return { token }
+
+    
   } catch (error) {
     console.error("Login error:", error);
     return { errors: { general: ["An error occurred. Please try again."] } };

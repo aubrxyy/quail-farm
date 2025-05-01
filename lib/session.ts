@@ -42,6 +42,8 @@ export async function createSession(id: number, role: string) {
     sameSite: 'lax',
     path: '/',
   });
+
+  return session;
 }
 
 export async function updateSession() {
