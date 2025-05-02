@@ -4,27 +4,33 @@ import { useEffect, useState } from "react";
 
 export default function EditAlamat() {
   const router = useRouter();
-  const { id } = router.query; // Ambil id dari query
   const [address, setAddress] = useState(null); // State untuk menyimpan alamat yang akan diedit
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [addressText, setAddressText] = useState("");
 
   useEffect(() => {
-    if (id) {
-      // Ambil data alamat berdasarkan ID
-      // Misalnya, Anda bisa menggunakan fetch untuk mendapatkan data dari API atau state global
-      // Contoh:
-      const fetchedAddress = {
-        name: "Contoh Nama",
-        phone: "+62 812 3456 7890",
-        address: "Contoh Alamat",
-      };
-      setAddress(fetchedAddress);
-    }
-  }, [id]);
+    const query = new URLSearchParams(window.location.search);
+    const id = query.get('id');
+
+    // Ambil data alamat berdasarkan ID (dummy data)
+    const fetchedAddress = {
+      id: id,
+      name: "Contoh Nama",
+      phone: "+62 812 3456 7890",
+      address: "Contoh Alamat",
+    };
+
+    setAddress(fetchedAddress);
+    setName(fetchedAddress.name);
+    setPhone(fetchedAddress.phone);
+    setAddressText(fetchedAddress.address);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // Simpan perubahan alamat
-    console.log(address);
+    console.log({ name, phone, addressText });
     router.push('/alamat'); // Redirect ke halaman alamat setelah menyimpan
   };
 
@@ -39,8 +45,8 @@ export default function EditAlamat() {
             <label className="block text-sm font-medium">Nama</label>
             <input
               type="text"
-              value={address.name}
-              onChange={(e) => setAddress({ ...address, name: e.target.value })}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             />
@@ -49,8 +55,8 @@ export default function EditAlamat() {
             <label className="block text-sm font-medium">Nomor Telepon</label>
             <input
               type="text"
-              value={address.phone}
-              onChange={(e) => setAddress({ ...address, phone: e.target.value })}
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               required
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             />
@@ -58,8 +64,8 @@ export default function EditAlamat() {
           <div className="mb-4">
             <label className="block text-sm font-medium">Alamat</label>
             <textarea
-              value={address.address}
-              onChange={(e) => setAddress({ ...address, address: e.target.value })}
+              value={addressText}
+              onChange={(e) => setAddressText(e.target.value)}
               required
               className="mt-1 block w-full border border-gray-300 rounded-md p-2"
             ></textarea>

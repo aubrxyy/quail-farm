@@ -49,7 +49,7 @@ export default function PageAlamat() {
 
   return (
     <div className='bg-[#F7F4E8] min-h-screen p-10 text-black'>
-        <Link href="/user" className="mt-4 text-black hover:underline mb-10">
+      <Link href="/user" className="mt-4 text-black hover:underline mb-10">
         &lt; Kembali ke userpage
       </Link>
       <div className="max-w-3xl mx-auto p-4">
@@ -57,13 +57,10 @@ export default function PageAlamat() {
         <Link href='/alamat/add'>
           <button
             className="mb-4 bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600"
-            onClick={() => {}} // Tombol ini tidak akan berfungsi
           >
             + Tambah Alamat Baru
           </button>
         </Link>
-
-        
 
         {addresses.length === 0 ? (
           <p className="text-gray-500">Anda belum memasukkan alamat.</p>

@@ -40,6 +40,9 @@ export default function Cart() {
     removeFromCart(index);
   };
 
+  // Menghitung total harga
+  const totalAmount = cart.reduce((total, item) => total + (item.price * item.quantity), 0);
+
   return (
     <div className={`bg-[#F7F4E8] min-h-screen p-10 flex flex-col items-start text-black ${poppR.className}`}>
         <Link href="/" className="text-black hover:underline text-left mb-2">
@@ -106,7 +109,7 @@ export default function Cart() {
                 <div className="flex-1">
                   <div 
                     className={`text-center py-2 rounded-r-lg cursor-pointer ${activeButton === 'delivery' ? 'bg-[#EDC043] text-white' : 'bg-[#EEEBDE] text-[#EDC043] hover:bg-[#EDC043] hover:text-white'}`} 
-                    onClick={() => { setActiveButton('delivery'); /* Tambahkan logika untuk Pick up */ }}
+                    onClick={() => { setActiveButton('delivery'); /* Tambahkan logika untuk Delivery */ }}
                     onMouseDown={() => setActiveButton('delivery')}
                     onMouseUp={() => setActiveButton('')}
                   >
@@ -116,9 +119,9 @@ export default function Cart() {
               </div>
               <div className="bg-[#EEEBDE] border border-[#CACACA] rounded-lg p-4">
                 <h3 className="font-bold text-lg text-center">RINGKASAN PEMBAYARAN</h3>
-                <p className="mt-6">Total: Rp. {(pricePerUnit * quantity).toLocaleString()}</p>
+                <p className="mt-6">Total: Rp. {totalAmount.toLocaleString()}</p>
                 <p>Biaya pengiriman: Rp. 0</p>
-                <p className="font-bold">Total Pembayaran: Rp. {(pricePerUnit * quantity).toLocaleString()}</p>
+                <p className="font-bold">Total Pembayaran: Rp. {totalAmount.toLocaleString()}</p>
                 <button className="bg-[#6B3C10] px-4 py-2 rounded-lg mt-8 text-white w-full font-bold ">CHECKOUT</button>
               </div>
             </div>

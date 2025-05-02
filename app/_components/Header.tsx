@@ -8,7 +8,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-
+import { useCart } from '../cart/CartContext';
 
 const interM = Inter({
   subsets: ['latin'],
@@ -28,6 +28,7 @@ const navigation = [
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
+  const { cart } = useCart();
   const [showHeader, setShowHeader] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -125,8 +126,13 @@ export function Header() {
                   <div className="flex space-x-8">
                     {user ? (
                       <>
-                        <Link href="/cart" className="flex items-center justify-center w-8 h-8">
+                        <Link href="/cart" className="flex items-center justify-center w-8 h-8 relative">
                           <Icon icon="mdi:cart" className="text-[#6B3C10] transition duration-200" width={30} height={30} />
+                          {cart.length > 0 && (
+                            <span className="absolute top-0 right-0 bg-red-500 text-white text-xs rounded-full px-1">
+                              {cart.length}
+                            </span>
+                          )}
                         </Link>
                         <Link href="/user" className="flex items-center justify-center w-8 h-8">
                           <Icon icon="mdi:account" className="text-[#6B3C10] transition duration-200" width={30} height={30} />
