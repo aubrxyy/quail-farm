@@ -27,16 +27,19 @@ export default function PageAlamat() {
     setIsDetailActive(true);
   }, []);
 
-  const addAddress = () => {
-    // Fungsi ini tidak berfungsi
+  const addAddress = (newAddress) => {
+    setAddresses((prevAddresses) => [
+      ...prevAddresses,
+      { ...newAddress, id: prevAddresses.length + 1 }, // Menambahkan ID baru
+    ]);
   };
 
   const handleSetPrimary = () => {
     // Fungsi ini tidak berfungsi
   };
 
-  const handleDelete = () => {
-    // Fungsi ini tidak berfungsi
+  const handleDelete = (id) => {
+    setAddresses((prevAddresses) => prevAddresses.filter(address => address.id !== id)); // Menghapus alamat berdasarkan ID
   };
 
   const handleEdit = (id) => {
@@ -54,7 +57,7 @@ export default function PageAlamat() {
         <Link href='/alamat/add'>
           <button
             className="mb-4 bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600"
-            onClick={addAddress} // Tombol ini tidak akan berfungsi
+            onClick={() => {}} // Tombol ini tidak akan berfungsi
           >
             + Tambah Alamat Baru
           </button>
@@ -83,7 +86,7 @@ export default function PageAlamat() {
                   </button>
                   <button
                     className="text-red-500 hover:underline"
-                    onClick={() => {}} // Tombol ini tidak akan berfungsi
+                    onClick={() => handleDelete(address.id)} // Menghapus alamat
                   >
                     Hapus
                   </button>

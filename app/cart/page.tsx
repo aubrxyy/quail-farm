@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { FaTrash } from 'react-icons/fa';
+import { useCart } from './CartContext';
 
 const poppR = Poppins({
   subsets: ['latin'],
@@ -19,10 +20,24 @@ export default function Cart() {
   const [quantity, setQuantity] = useState(1);
   const pricePerUnit = 40000;
   const [activeButton, setActiveButton] = useState('');
+  const { cart, addToCart, removeFromCart } = useCart();
 
   const increaseQuantity = () => setQuantity((prev) => prev + 1);
   const decreaseQuantity = () => {
     if (quantity > 1) setQuantity((prev) => prev - 1);
+  };
+
+  const handleAddToCart = () => {
+    const newItem = {
+      name: "Puyuh",
+      quantity: quantity,
+      price: pricePerUnit,
+    };
+    addToCart(newItem);
+  };
+
+  const handleRemoveFromCart = (index) => {
+    removeFromCart(index);
   };
 
   return (
@@ -44,31 +59,35 @@ export default function Cart() {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b dark:border-gray-700 hover:bg-gray-100 transition-colors">
-                    <td className="px-4 py-3 flex items-center justify-center">
-                      <Image
-                        src="/telurpuyuh.png" // Ganti dengan path gambar yang sesuai
-                        alt="Telur Puyuh"
-                        width={50}
-                        height={50}
-                        className="rounded-lg mr-4"/>
-                      <span>Telur Puyuh</span>
-                    </td>
-                    <td className="px-4 py-3 text-center">Rp. {pricePerUnit.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-center">
-                      <button onClick={decreaseQuantity} className="text-[#EDC043] px-2 rounded font-bold transition-colors">-</button>
-                      <span className="mx-2">{quantity}</span>
-                      <button onClick={increaseQuantity} className="text-[#EDC043] px-2 rounded font-bold transition-colors">+</button>
-                    </td>
-                    <td className="px-4 py-3 justify-end">
-                      <div 
-                        className="p-2 rounded-full  transition-colors cursor-pointer flex items-center justify-center" 
-                        onClick={() => {/* Tambahkan logika untuk menghapus item */}}
-                      >
-                        <FaTrash className="text-red-600 text-lg" />
-                      </div>
-                    </td>
-                  </tr>
+                  {cart.length === 0 ? (
+                    <tr>
+                      <td colSpan="4" className="text-center py-4">Keranjang Kosong</td>
+                    </tr>
+                  ) : (
+                    cart.map((item, index) => (
+                      <tr key={index} className="border-b dark:border-gray-700 hover:bg-gray-100 transition-colors">
+                        <td className="px-4 py-3 flex items-center justify-center">
+                          <Image
+                            src="/telurpuyuh.png" // Ganti dengan path gambar yang sesuai
+                            alt="Telur Puyuh"
+                            width={50}
+                            height={50}
+                            className="rounded-lg mr-4"/>
+                          <span>{item.name}</span>
+                        </td>
+                        <td className="px-4 py-3 text-center">Rp. {item.price.toLocaleString()}</td>
+                        <td className="px-4 py-3 text-center">{item.quantity}</td>
+                        <td className="px-4 py-3 justify-end">
+                          <div 
+                            className="p-2 rounded-full transition-colors cursor-pointer flex items-center justify-center" 
+                            onClick={() => handleRemoveFromCart(index)}
+                          >
+                            <FaTrash className="text-red-600 text-lg" />
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

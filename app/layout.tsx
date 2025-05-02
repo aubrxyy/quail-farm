@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Poppins } from 'next/font/google';
-import "./globals.css";
-import Template from "./template";
-import ClientLayout from "./clientlayout";
+import { Poppins } from 'next/font/google';
 import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Script from 'next/script';
+import { CartProvider } from './cart/CartContext';
+import ClientLayout from "./clientlayout";
+import "./globals.css";
+import Template from "./template";
 
 const poppR = Poppins({
   subsets: ['latin'],
@@ -27,11 +27,13 @@ export default function RootLayout({
       <head>
       </head>
       <body className={`${poppR.className} antialiased`}>
-        <Template>
-          <ClientLayout>
-            {children}
-          </ClientLayout>
-        </Template>
+        <CartProvider>
+          <Template>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </Template>
+        </CartProvider>
         <ToastContainer
           autoClose={3000}
           pauseOnFocusLoss

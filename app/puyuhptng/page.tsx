@@ -4,6 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { FaShoppingCart } from 'react-icons/fa';
+import Swal from 'sweetalert2';
+import { useCart } from '../cart/CartContext';
 
 const poppR = Poppins({
   subsets: ['latin'],
@@ -16,12 +18,29 @@ const poppB = Poppins({
 });
 
 export default function PuyuhPotong() {
+  const { addToCart } = useCart();
   const [quantity, setQuantity] = useState(1);
   const pricePerUnit = 35000;
 
   const increaseQuantity = () => setQuantity((prev) => prev + 1);
   const decreaseQuantity = () => {
     if (quantity > 1) setQuantity((prev) => prev - 1);
+  };
+
+  const handleAddToCart = () => {
+    const newItem = {
+      name: "Puyuh Potong",
+      quantity: quantity,
+      price: pricePerUnit,
+    };
+    addToCart(newItem);
+
+    Swal.fire({
+      title: 'Berhasil!',
+      text: `${newItem.quantity} ${newItem.name} telah ditambahkan ke keranjang!`,
+      icon: 'success',
+      confirmButtonText: 'OK'
+    });
   };
 
   return (
@@ -53,7 +72,7 @@ export default function PuyuhPotong() {
               <span className="mx-4 text-sm text-black font-bold">{quantity}</span>
               <button onClick={increaseQuantity} className="text-[#EDC043] font-bold rounded-full w-8 h-8 flex items-center justify-center">+</button>
             </div>
-            <button className="bg-[#EDC043] text-black px-6 py-2 rounded-full font-semibold flex items-center">
+            <button onClick={handleAddToCart} className="bg-[#EDC043] text-black px-6 py-2 rounded-full font-semibold flex items-center">
               <FaShoppingCart className="mr-2" />
               Tambah ke keranjang
             </button>
