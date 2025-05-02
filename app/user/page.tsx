@@ -1,5 +1,7 @@
 // app/profile/page.tsx
 'use client';
+import { Icon } from '@iconify/react';
+import Link from 'next/link';
 import { useState } from 'react';
 
 export default function Profile() {
@@ -30,9 +32,23 @@ export default function Profile() {
           <p className="text-gray-600">{email}</p>
           <p className="text-gray-600">{phone}</p>
 
-          <div className="mt-8 ml-2 flex flex-col">
-            <button className="bg-gray-200 px-4 py-2 rounded">Order Saya</button>
-            <button className="bg-gray-200 px-4 py-2 rounded mt-2">Alamat</button>
+          <div className="mt-8 ml-2 flex flex-col items-left ">
+            <button className=" px-4 py-2 rounded flex items-center justify-left">
+              <Icon icon="mdi:account" className="mr-2" />
+              Detail Akun
+            </button>
+            <Link href="/user/history-order">
+              <button className="px-4 py-2 rounded flex items-center mt-2">
+                <Icon icon="mdi:shopping" className="mr-2" />
+                Riwayat Order
+              </button>
+            </Link>
+            <Link href="/alamat">
+              <button className="px-4 py-2 rounded mt-2 flex items-center">
+                <Icon icon="mdi:map-marker" className="mr-2" />
+                Alamat
+              </button>
+            </Link>
           </div>
         </div>
         <div className="md:w-2/3 ml-4">
@@ -78,7 +94,6 @@ export default function Profile() {
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="mt-1 block w-full border border-gray-300 rounded-md p-2"
-                required
               />
             </div>
             <div>
@@ -88,11 +103,11 @@ export default function Profile() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={`mt-1 block w-full border ${errorMessage ? 'border-red-500' : 'border-gray-300'} rounded-md p-2 transition duration-300 ease-in-out`}
-                required
+                
               />
               {errorMessage && <p className="text-red-500 text-sm mt-1 animate-pulse">{errorMessage}</p>}
             </div>
-            <button type="submit" className="bg-green-500 text-white px-4 py-2 rounded mt-4">
+            <button type="submit" className="bg-[#6B3C10] text-white px-4 py-2 rounded mt-4">
               Perbarui Akun
             </button>
           </form>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from 'next/font/google';
+import { Inter, Poppins } from 'next/font/google';
 import "./globals.css";
 import Template from "./template";
 import ClientLayout from "./clientlayout";
@@ -7,7 +7,7 @@ import { Slide, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Script from 'next/script';
 
-const interR = Inter({
+const poppR = Poppins({
   subsets: ['latin'],
   weight: '400',
 });
@@ -26,7 +26,7 @@ export default function RootLayout({
     <html lang="en">
       <head>
       </head>
-      <body className={`${interR.className} antialiased`}>
+      <body className={`${poppR.className} antialiased`}>
         <Template>
           <ClientLayout>
             {children}
