@@ -1,13 +1,9 @@
-import AdminHeader from "./Header";
-import AdminNavbar from "./Navbar";
 import Image from "next/image";
 
 
 export default function Dashboard() {
     return (
        <div className="flex text-black bg-bright-egg-white">
-        <AdminHeader />
-        <AdminNavbar />
             <div className="px-8 mt-24 flex flex-col gap-y-6 w-full">
                 <div className="grid grid-cols-4 gap-2 md:gap-4 xl:gap-6 w-full">
                     <div className='h-24 bg-white rounded-xl flex justify-between p-4'>
@@ -55,7 +51,7 @@ export default function Dashboard() {
                 </div>
 
                 
-                <div className='h-64 bg-white rounded-xl flex p-8 flex-col gap-y-4'>
+                <div className='h-200 bg-white rounded-xl flex p-8 flex-col gap-y-4'>
                     <span className="text-2xl text-gray-600 font-semibold">Sales Details</span>
                     <div className="grid grid-cols-6 gap-x-22 text-sm font-medium bg-gray-100 rounded-xl h-12 w-full p-4">
                         <span>Product name</span>

@@ -11,16 +11,18 @@ datasource db {
 }
 
 model User {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  password  String
-  role      Role      @default(USER)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  Address   Address[]
-  Cart      Cart[]
-  Order     Order[]
+  id                Int       @id @default(autoincrement())
+  name              String
+  email             String    @unique
+  password          String
+  role              Role      @default(USER)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  emailVerified     Boolean   @default(false)
+  verificationToken String?
+  Address           Address[]
+  Cart              Cart[]
+  Order             Order[]
 
   @@schema("puyuh")
 }

@@ -10,7 +10,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ errors: result.errors }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    return NextResponse.json({ success: true, token: result.token }, { status: 200 });
   } catch (error) {
     console.error('API Login Error:', error);
     return NextResponse.json(

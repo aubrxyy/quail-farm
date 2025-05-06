@@ -7,7 +7,7 @@ const AdminNavbar = () => {
   const pathname = usePathname();
 
   return (
-    <div className="flex">
+    <aside className="hidden md:block h-screen fixed top-0 left-0">
         <div className="h-screen bg-egg-white pr-4 text-black pt-24 relative flex flex-col font-medium ">
           <nav className="flex-1 ">
             <ul className='flex flex-col '>
@@ -70,7 +70,7 @@ const AdminNavbar = () => {
             </ul>
           </nav>
       </div>
-    </div>
+    </aside>
   );
 };
 

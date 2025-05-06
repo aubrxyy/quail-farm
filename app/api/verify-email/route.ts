@@ -24,12 +24,12 @@ export async function GET(request: Request) {
     await prisma.user.update({
       where: { id: user.id },
       data: {
-        emailVerified: new Date(),
+        emailVerified: true,  // Set to true instead of DateTime
         verificationToken: null
       }
     });
 
-    // Redirect to success page
+    // Redirect to verification success page
     return NextResponse.redirect(new URL('/verification-success', request.url));
   } catch (error) {
     console.error('Error verifying email:', error);

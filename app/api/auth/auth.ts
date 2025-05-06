@@ -30,6 +30,8 @@ export async function signup(formData: FormData) {
         name,
         email,
         password: hashedPassword,
+        emailVerified: false,
+        verificationToken: crypto.randomUUID(), // Generate a unique token for email verification
       },
     });
 
@@ -69,9 +71,11 @@ export async function login(formData: FormData) {
       return { errors: { password: ["Invalid email or password."] } };
     }
 
-    await createSession(user.id, user.role);
+    const token = await createSession(user.id, user.role);
 
-    return { success: true };
+    return { token }
+
+    
   } catch (error) {
     console.error("Login error:", error);
     return { errors: { general: ["An error occurred. Please try again."] } };

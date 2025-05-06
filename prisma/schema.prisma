@@ -18,6 +18,8 @@ model User {
   role        Role          @default(USER)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
+  emailVerified Boolean      @default(false)
+  verificationToken  String? 
   Address     Address[] 
   Cart        Cart[]
   Order       Order[]
