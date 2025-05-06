@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Status } from '@/lib/generated/prisma'; // Assuming Status is an enum in your Prisma schema
 import { z } from 'zod';
 
 const updateOrderSchema = z.object({
@@ -9,7 +10,7 @@ const updateOrderSchema = z.object({
   orderType: z.string().min(1).optional(),
   orderAmount: z.number().int().positive().optional(),
   totalPrice: z.number().positive().optional(),
-  status: z.string().min(1).optional(),
+  status: z.enum(['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']).transform(val => val as Status),
   productId: z.number().int().positive().optional(),
 });
 

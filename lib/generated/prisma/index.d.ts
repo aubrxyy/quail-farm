@@ -64,10 +64,9 @@ export type Role = (typeof Role)[keyof typeof Role]
 export const Status: {
   PENDING: 'PENDING',
   PROCESSING: 'PROCESSING',
-  COMPLETED: 'COMPLETED',
-  ONHOLD: 'ONHOLD',
-  REJECTED: 'REJECTED',
-  INTRANSIT: 'INTRANSIT'
+  SHIPPED: 'SHIPPED',
+  DELIVERED: 'DELIVERED',
+  CANCELLED: 'CANCELLED'
 };
 
 export type Status = (typeof Status)[keyof typeof Status]

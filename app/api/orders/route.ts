@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { Status } from '@/lib/generated/prisma';
 import { z } from 'zod';
-
 const createOrderSchema = z.object({
   customerName: z.string().min(1),
   customerAddress: z.string().min(1),
@@ -9,7 +9,7 @@ const createOrderSchema = z.object({
   orderType: z.string().min(1),
   orderAmount: z.number().int().positive(),
   totalPrice: z.number().positive(),
-  status: z.string().min(1),
+  status: z.enum(['PENDING', 'PROCESSING', 'SHIPPED', 'DELIVERED', 'CANCELLED']).transform(val => val as Status),
   productId: z.number().int().positive(),
 });
 

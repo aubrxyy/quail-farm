@@ -127,10 +127,9 @@ enum Role {
 enum Status {
   PENDING
   PROCESSING
-  COMPLETED
-  ONHOLD
-  REJECTED
-  INTRANSIT
+  SHIPPED
+  DELIVERED
+  CANCELLED
 
   @@schema("puyuh")
 }
