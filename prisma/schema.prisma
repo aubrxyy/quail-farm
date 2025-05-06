@@ -11,18 +11,18 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  name      String
-  email     String   @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          Int           @id @default(autoincrement())
+  name        String
+  email       String        @unique
+  password    String
+  role        Role          @default(USER)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  Address     Address[] 
+  Cart        Cart[]
+  Order       Order[]
 
   @@schema("puyuh")
-  Cart Cart[]
-  Transaction Transaction[]
-  Address Address[]
 }
 
 model Product {
@@ -34,26 +34,34 @@ model Product {
   stock        Int
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
+  Cart         Cart[]
   orders       Order[]
-  transactions Transaction[]
 
   @@schema("puyuh")
-  Cart Cart[]
 }
 
 model Order {
   id              Int      @id @default(autoincrement())
-  customerName    String
-  customerAddress String
+  // User relation
+  userId          Int      // Foreign key to User table
+  user            User     @relation(fields: [userId], references: [id])
+  
+  // Product relation
+  productId       Int      // Foreign key to Product table  
+  product         Product  @relation(fields: [productId], references: [id])
+  
+  // Order-specific fields
+  customerName    String    // Can be derived from user but stored for historical record
+  customerAddress String    // Can be derived from user but stored for historical record
   orderDate       DateTime
   orderType       String
   orderAmount     Int
   totalPrice      Float
-  status          Status @default(PENDING)
-  productId       Int
+  status          Status   @default(PENDING)
+  
+  // Timestamps
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  product         Product  @relation(fields: [productId], references: [id])
 
   @@schema("puyuh")
 }
@@ -72,19 +80,17 @@ model Employee {
 }
 
 model Cart {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  productId  Int
-  quantity   Int      @default(1)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-
-  user       User     @relation(fields: [userId], references: [id])
-  product    Product  @relation(fields: [productId], references: [id])
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
 
   @@schema("puyuh")
 }
-
 
 model Address {
   id         Int      @id @default(autoincrement())
@@ -94,25 +100,7 @@ model Address {
   postalCode String
   userId     Int
   createdAt  DateTime @default(now())
-
-  // Relation
   user       User     @relation(fields: [userId], references: [id])
-
-  @@schema("puyuh")
-}
-
-
-model Transaction {
-  id         Int      @id @default(autoincrement())
-  transactionId String @unique
-  userId     Int
-  productId  Int
-  amount     Int
-  totalPrice Float
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  user       User     @relation(fields: [userId], references: [id])
-  product    Product  @relation(fields: [productId], references: [id])
 
   @@schema("puyuh")
 }
