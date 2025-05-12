@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { decrypt } from '@/lib/session';
+import { cookies } from 'next/headers';
+
 
 // Get all cart items or filter by userId
 export async function GET(req: NextRequest) {
@@ -32,38 +35,47 @@ export async function GET(req: NextRequest) {
 
 // Add item to cart
 export async function POST(req: NextRequest) {
-  const data = await req.json();
-  const { userId, productId, quantity } = data;
-
-  if (!userId || !productId) {
-    return NextResponse.json(
-      { error: 'userId and productId are required' }, 
-      { status: 400 }
-    );
-  }
-
   try {
+    // Get the session from cookies
+    const session = (await cookies()).get('session')?.value;
+    const payload = await decrypt(session);
+
+    if (!payload) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const userId = payload.id; // Extract userId from session
+    const data = await req.json();
+    const { productId, quantity } = data;
+
+    if (!productId) {
+      return NextResponse.json(
+        { error: 'productId is required' },
+        { status: 400 }
+      );
+    }
+
     // Check if product exists in user's cart
     const existingCartItem = await prisma.cart.findFirst({
       where: {
         userId,
-        productId
-      }
+        productId,
+      },
     });
 
     if (existingCartItem) {
       // Update quantity if item already exists
       const updatedCartItem = await prisma.cart.update({
         where: { id: existingCartItem.id },
-        data: { 
-          quantity: existingCartItem.quantity + (quantity || 1)
+        data: {
+          quantity: existingCartItem.quantity + (quantity || 1),
         },
         include: {
           user: true,
-          product: true
-        }
+          product: true,
+        },
       });
-      
+
       return NextResponse.json(updatedCartItem, { status: 200 });
     } else {
       // Create new cart item
@@ -71,14 +83,14 @@ export async function POST(req: NextRequest) {
         data: {
           userId,
           productId,
-          quantity: quantity || 1
+          quantity: quantity || 1,
         },
         include: {
           user: true,
-          product: true
-        }
+          product: true,
+        },
       });
-      
+
       return NextResponse.json(newCartItem, { status: 201 });
     }
   } catch (error) {
