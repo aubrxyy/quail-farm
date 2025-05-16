@@ -8,16 +8,23 @@ export async function middleware(request: Request) {
 
   const url = new URL(request.url);
 
-  // Allow public routes like login, register, and auth-related routes
-  if (
-    url.pathname === '/register' ||
-    url.pathname === '/login' ||
-    url.pathname.startsWith('/api/auth')
-  ) {
+  if (url.pathname === '/register' || url.pathname === '/login') {
+    if (sessionToken) {
+      try {
+        const session = await decrypt(sessionToken);
+
+        if (session?.role === 'ADMIN') {
+          return NextResponse.redirect(new URL('/admin/dashboard', request.url));
+        }
+
+        return NextResponse.redirect(new URL('/', request.url));
+      } catch (error) {
+        console.error('Failed to verify session:', error);
+      }
+    }
     return NextResponse.next();
   }
 
-  // Redirect authenticated users to the appropriate dashboard
   if (url.pathname === '/') {
     if (sessionToken) {
       try {
@@ -33,7 +40,6 @@ export async function middleware(request: Request) {
     return NextResponse.next();
   }
 
-  // Protect admin routes
   if (url.pathname.startsWith('/admin')) {
     if (!sessionToken) {
       return NextResponse.redirect(new URL('/', request.url));
@@ -51,7 +57,7 @@ export async function middleware(request: Request) {
     }
   }
 
-  // Protect API routes
+  // API route protection for ADMIN users
   if (url.pathname.startsWith('/api')) {
     if (!sessionToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -60,7 +66,6 @@ export async function middleware(request: Request) {
     try {
       const session = await decrypt(sessionToken);
 
-      // Restrict access to /api/employee and /api/users to ADMIN only
       if (
         (url.pathname.startsWith('/api/employee') || url.pathname.startsWith('/api/users')) &&
         session?.role !== 'ADMIN'
@@ -68,7 +73,6 @@ export async function middleware(request: Request) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
       }
 
-      // Allow access to other API routes (e.g., /api/cart, /api/orders) if session exists
       return NextResponse.next();
     } catch (error) {
       console.error('Failed to verify session:', error);
@@ -80,11 +84,5 @@ export async function middleware(request: Request) {
 }
 
 export const config = {
-  matcher: [
-    '/admin/:path*', // Protect admin routes
-    '/register', // Public route
-    '/login', // Public route
-    '/api/:path*', // Protect API routes
-    '/', // Root route
-  ],
+  matcher: ['/admin/:path*', '/register', '/login', '/', '/api/:path*'],
 };
