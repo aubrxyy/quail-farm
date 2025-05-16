@@ -85,5 +85,13 @@ export async function middleware(request: Request) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/register', '/login', '/', '/api/:path*'],
+  matcher: [
+    '/admin/:path*', // Protect admin routes
+    '/register', // Public route
+    '/login', // Public route
+    '/', // Root route
+    '/api/:path*', // Protect API routes
+    '!api/auth/signup', // Allow public access to signup
+    '!api/auth/verify-email', // Allow public access to email verification
+  ],
 };
