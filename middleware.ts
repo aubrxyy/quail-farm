@@ -85,20 +85,11 @@ export async function middleware(request: Request) {
 }
 
 export const config = {
-  matcher: {
-   // Include paths
-    include: [
-      '/admin/:path*',
-      '/register', 
-      '/login',
-      '/',
-      '/api/:path*'
-    ],
-    // Exclude paths
-    exclude: [
-      '/api/auth/signup',
-      '/api/auth/verify-email',
-      '/verification-pending'
-    ]
-  },
-};
+  matcher: [
+    '/admin/:path*',
+    '/register', 
+    '/login',
+    '/',
+    '/api/:path*',
+  ],
+  };
