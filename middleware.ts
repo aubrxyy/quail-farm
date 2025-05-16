@@ -8,6 +8,7 @@ export async function middleware(request: Request) {
 
   const url = new URL(request.url);
 
+  // Allow public routes like login and register
   if (url.pathname === '/register' || url.pathname === '/login') {
     if (sessionToken) {
       try {
@@ -25,6 +26,7 @@ export async function middleware(request: Request) {
     return NextResponse.next();
   }
 
+  // Redirect authenticated users to the appropriate dashboard
   if (url.pathname === '/') {
     if (sessionToken) {
       try {
@@ -40,6 +42,7 @@ export async function middleware(request: Request) {
     return NextResponse.next();
   }
 
+  // Protect admin routes
   if (url.pathname.startsWith('/admin')) {
     if (!sessionToken) {
       return NextResponse.redirect(new URL('/', request.url));
@@ -57,9 +60,40 @@ export async function middleware(request: Request) {
     }
   }
 
+  // Protect API routes
+  if (url.pathname.startsWith('/api')) {
+    if (!sessionToken) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    try {
+      const session = await decrypt(sessionToken);
+
+      // Restrict access to /api/employee and /api/users to ADMIN only
+      if (
+        (url.pathname.startsWith('/api/employee') || url.pathname.startsWith('/api/users')) &&
+        session?.role !== 'ADMIN'
+      ) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
+      // Allow access to other API routes (e.g., /api/cart, /api/orders) if session exists
+      return NextResponse.next();
+    } catch (error) {
+      console.error('Failed to verify session:', error);
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/register', '/login', '/'],
+  matcher: [
+    '/admin/:path*', // Protect admin routes
+    '/register', // Public route
+    '/login', // Public route
+    '/', // Root route
+    '/api/:path*', // Protect API routes
+  ],
 };
