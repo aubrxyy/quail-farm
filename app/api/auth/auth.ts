@@ -1,6 +1,8 @@
 "use server"
 
 import bcrypt from "bcrypt";
+import crypto from "crypto";
+import { sendVerificationEmail } from "@/lib/email";
 import { LoginFormSchema, SignupFormSchema } from "@/lib/definitions";
 import { prisma } from "@/lib/prisma";
 import { createSession } from "@/lib/session";
@@ -24,6 +26,7 @@ export async function signup(formData: FormData) {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
+    const verificationToken = crypto.randomUUID();
 
     const user = await prisma.user.create({
       data: {
@@ -31,15 +34,20 @@ export async function signup(formData: FormData) {
         email,
         password: hashedPassword,
         emailVerified: false,
-        verificationToken: crypto.randomUUID(), // Generate a unique token for email verification
+        verificationToken,
       },
     });
+
+    await sendVerificationEmail(email, verificationToken);
+    redirect('/verification-pending');
 
     await createSession(user.id, user.role);
     redirect('/');
   } catch (error) {
     return { errors: { email: ["Email is already in use."] } };
   }
+
+
 }
 
 export async function login(formData: FormData) {

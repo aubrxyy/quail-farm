@@ -95,5 +95,8 @@ export const config = {
     '/login', // Public route
     '/', // Root route
     '/api/:path*', // Protect API routes
+    '!/api/auth/signup', // Allow public access to signup
+    '!/api/auth/login', // Allow public access to login
+    '!/api/auth/verify-email', // Allow public access to verify email
   ],
 };
