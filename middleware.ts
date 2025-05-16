@@ -8,21 +8,12 @@ export async function middleware(request: Request) {
 
   const url = new URL(request.url);
 
-  // Allow public routes like login and register
-  if (url.pathname === '/register' || url.pathname === '/login') {
-    if (sessionToken) {
-      try {
-        const session = await decrypt(sessionToken);
-
-        if (session?.role === 'ADMIN') {
-          return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-        }
-
-        return NextResponse.redirect(new URL('/', request.url));
-      } catch (error) {
-        console.error('Failed to verify session:', error);
-      }
-    }
+  // Allow public routes like login, register, and auth-related routes
+  if (
+    url.pathname === '/register' ||
+    url.pathname === '/login' ||
+    url.pathname.startsWith('/api/auth')
+  ) {
     return NextResponse.next();
   }
 
@@ -93,7 +84,7 @@ export const config = {
     '/admin/:path*', // Protect admin routes
     '/register', // Public route
     '/login', // Public route
-    '/', // Root route
     '/api/:path*', // Protect API routes
+    '/', // Root route
   ],
 };
