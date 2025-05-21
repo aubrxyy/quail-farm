@@ -1,5 +1,8 @@
 // lib/email.ts
 import nodemailer from 'nodemailer';
+import { PrismaClient } from '@prisma/client';
+
+const prisma = new PrismaClient();
 
 // Configure transporter (update with your SMTP settings)
 const transporter = nodemailer.createTransport({
@@ -129,6 +132,188 @@ export async function sendNewsletterEmail(email: string, content: string) {
         ${content}
         <p style="margin-top: 30px; font-size: 12px; color: #6c757d;">
           If you no longer wish to receive these emails, you can <a href="${process.env.NEXTAUTH_URL}/unsubscribe?email=${email}">unsubscribe here</a>.
+        </p>
+      </div>
+    `,
+  };
+
+  return transporter.sendMail(mailOptions);
+}
+
+// Add to lib/email.ts
+
+// Enhanced order notification that goes to both customer and admins
+export async function sendOrderNotifications(order: any) {
+  try {
+    // First get the user who placed the order
+    const customer = await prisma.user.findUnique({
+      where: { id: order.userId }
+    });
+
+    // Find all admins
+    const admins = await prisma.user.findMany({
+      where: { role: 'ADMIN' }
+    });
+
+    const promises = [];
+    
+    // Send to customer if they have an email
+    if (customer?.email) {
+      promises.push(sendOrderCreatedEmail(customer.email, order));
+    }
+    
+    // Send to all admins
+    for (const admin of admins) {
+      if (admin.email) {
+        promises.push(
+          sendAdminOrderNotification(
+            admin.email, 
+            order, 
+            customer?.name || order.customerName
+          )
+        );
+      }
+    }
+    
+    // Wait for all emails to be sent
+    await Promise.all(promises);
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to send order notifications:', error);
+    // We don't want to fail the order if email fails
+    return false;
+  }
+}
+
+// Admin-specific order notification with more details
+export async function sendAdminOrderNotification(email: string, order: any, customerName: string) {
+  const mailOptions = {
+    from: `"Quail Farm Orders" <${process.env.EMAIL_FROM}>`,
+    to: email,
+    subject: `🚨 New Order #${order.id} Received`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="background-color: #4CAF50; color: white; padding: 10px 15px; border-radius: 5px;">
+          New Order Received
+        </h2>
+        <p><strong>Admin Alert:</strong> A new order has been placed and requires your attention.</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0;">
+          <h3 style="margin-top: 0; border-bottom: 1px solid #dee2e6; padding-bottom: 10px;">
+            Order #${order.id} Details
+          </h3>
+          <p><strong>Customer:</strong> ${customerName}</p>
+          <p><strong>Product:</strong> ${order.product?.name || 'Product #' + order.productId}</p>
+          <p><strong>Quantity:</strong> ${order.orderAmount}</p>
+          <p><strong>Total Price:</strong> Rp${order.totalPrice.toLocaleString('id-ID')}</p>
+          <p><strong>Address:</strong> ${order.customerAddress}</p>
+          <p><strong>Date:</strong> ${new Date(order.orderDate).toLocaleString()}</p>
+          <p><strong>Status:</strong> <span style="color: #ff9800; font-weight: bold;">${order.status}</span></p>
+        </div>
+        
+        <div style="margin-top: 30px;">
+          <a href="${process.env.NEXTAUTH_URL}/admin/orders/${order.id}" 
+             style="background-color: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">
+            Process Order
+          </a>
+        </div>
+        
+        <p style="margin-top: 30px; font-size: 12px; color: #6c757d; border-top: 1px solid #dee2e6; padding-top: 15px;">
+          This is an automated message from the Quail Farm order system.
+        </p>
+      </div>
+    `,
+  };
+
+  return transporter.sendMail(mailOptions);
+}
+
+// Low stock notification for admins
+export async function sendLowStockAlert(email: string, product: any) {
+  const mailOptions = {
+    from: `"Quail Farm Inventory" <${process.env.EMAIL_FROM}>`,
+    to: email,
+    subject: `⚠️ Low Stock Alert: ${product.name}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="background-color: #f44336; color: white; padding: 10px 15px; border-radius: 5px;">
+          Low Stock Alert
+        </h2>
+        <p>The following product is running low on inventory and requires your attention:</p>
+        
+        <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0;">
+          <h3 style="margin-top: 0; color: #f44336;">${product.name}</h3>
+          <p><strong>Current Stock:</strong> ${product.stock} units</p>
+          <p><strong>Product ID:</strong> ${product.id}</p>
+          <p><strong>Price:</strong> Rp${product.harga.toLocaleString('id-ID')}</p>
+        </div>
+        
+        <div style="margin-top: 30px;">
+          <a href="${process.env.NEXTAUTH_URL}/admin/products/${product.id}" 
+             style="background-color: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px; display: inline-block;">
+            Update Inventory
+          </a>
+        </div>
+      </div>
+    `,
+  };
+
+  return transporter.sendMail(mailOptions);
+}
+
+// Batch send inventory status report to admins
+export async function sendInventoryStatusReport(email: string, lowStockProducts: any[]) {
+  const productRows = lowStockProducts.map(product => `
+    <tr>
+      <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">${product.name}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: center; ${
+        product.stock <= 5 ? 'color: #f44336; font-weight: bold;' : ''
+      }">${product.stock}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">Rp${product.harga.toLocaleString('id-ID')}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">
+        <a href="${process.env.NEXTAUTH_URL}/admin/products/${product.id}" 
+           style="color: #007bff; text-decoration: none; display: block; text-align: center;">
+          Update
+        </a>
+      </td>
+    </tr>
+  `).join('');
+
+  const mailOptions = {
+    from: `"Quail Farm Inventory System" <${process.env.EMAIL_FROM}>`,
+    to: email,
+    subject: `📊 Inventory Status Report - Low Stock Items`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
+        <h2 style="background-color: #343a40; color: white; padding: 15px; border-radius: 5px;">
+          Inventory Status Report
+        </h2>
+        <p>The following products are currently low on stock and may need replenishment:</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #dee2e6;">
+          <thead>
+            <tr style="background-color: #f8f9fa;">
+              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Product Name</th>
+              <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Current Stock</th>
+              <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Price</th>
+              <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${productRows}
+          </tbody>
+        </table>
+        
+        <div style="margin-top: 30px;">
+          <a href="${process.env.NEXTAUTH_URL}/admin/products" 
+             style="background-color: #28a745; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
+            View All Products
+          </a>
+        </div>
+        
+        <p style="margin-top: 30px; font-size: 12px; color: #6c757d; border-top: 1px solid #dee2e6; padding-top: 15px;">
+          This report was automatically generated by the Quail Farm inventory management system.
         </p>
       </div>
     `,

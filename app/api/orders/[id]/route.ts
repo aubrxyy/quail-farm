@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { decrypt } from '@/lib/session';
 import { cookies } from 'next/headers';
 import { sendOrderStatusUpdateEmail } from '@/lib/email';
+import { updateInventoryForOrder, restockInventoryForCancelledOrder } from '@/lib/inventory';
 
 // Define schema for order updates - only include fields that should be updatable
 const updateOrderSchema = z.object({
@@ -117,9 +118,7 @@ export async function PUT(
       return NextResponse.json({ 
         error: 'Regular users can only cancel orders' 
       }, { status: 403 });
-    }
-
-    // Update the order
+    }    // Update the order
     const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: parsed.data,
@@ -131,6 +130,12 @@ export async function PUT(
 
     // Send email notification if status changed
     if (parsed.data.status && existingOrder.status !== parsed.data.status) {
+      // Handle inventory if status changed to CANCELLED
+      if (parsed.data.status === 'CANCELLED' && existingOrder.status !== 'CANCELLED') {
+        // Return items to inventory
+        await restockInventoryForCancelledOrder(orderId);
+      }
+
       // Send email to customer if they have an email
       if (existingOrder.user?.email) {
         await sendOrderStatusUpdateEmail(
@@ -201,6 +206,12 @@ export async function DELETE(
 
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+  // For completed orders, restore inventory before deleting
+    if (order.status !== 'DELIVERED' && order.status !== 'CANCELLED') {
+      // Restore inventory for orders that weren't delivered or already cancelled
+      await restockInventoryForCancelledOrder(orderId);
     }
 
     // Delete the order

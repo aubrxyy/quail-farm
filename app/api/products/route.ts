@@ -10,8 +10,30 @@ const createProductSchema = z.object({
   stock: z.number().int().min(0),
 });
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const stockFilter = searchParams.get('stock');
+    
+    // Handle filtering by stock level
+    if (stockFilter === 'low') {
+      const lowStockThreshold = parseInt(process.env.LOW_STOCK_THRESHOLD || '20');
+      
+      const products = await prisma.product.findMany({
+        where: {
+          stock: {
+            lte: lowStockThreshold
+          }
+        },
+        orderBy: {
+          stock: 'asc'
+        }
+      });
+      
+      return NextResponse.json(products);
+    }
+    
+    // No filters, return all products
     const products = await prisma.product.findMany();
     return NextResponse.json(products);
   } catch (error) {

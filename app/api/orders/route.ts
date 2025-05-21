@@ -5,6 +5,7 @@ import { z } from 'zod';
 import { decrypt } from '@/lib/session';
 import { cookies } from 'next/headers';
 import { sendOrderCreatedEmail } from '@/lib/email';
+import { checkInventoryAvailability, updateInventoryForOrder } from '@/lib/inventory';
 
 // Define schema for order creation
 const createOrderSchema = z.object({
@@ -68,23 +69,36 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const body = await request.json();
-    const parsed = createOrderSchema.safeParse(body);
+const body = await request.json();
+const parsed = createOrderSchema.safeParse(body);
+
+if (!parsed.success) {
+  return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
+}
+
+// Get user from database
+const user = await prisma.user.findUnique({
+  where: { id: payload.id }
+});
+
+if (!user) {
+  return NextResponse.json({ error: 'User not found' }, { status: 404 });
+}
+
+// Check inventory before creating order
     
-    if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
+    // Check inventory before creating order
+    const inventoryCheck = await checkInventoryAvailability(
+      parsed.data.productId, 
+      parsed.data.orderAmount
+    );
+    
+    if (!inventoryCheck.available) {
+      return NextResponse.json({ 
+        error: `Insufficient stock. Only ${inventoryCheck.currentStock} available.` 
+      }, { status: 400 });
     }
-    
-    // Get user from database
-    const user = await prisma.user.findUnique({
-      where: { id: payload.id }
-    });
-    
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
-    
-    // Create order
+      // Create order
     const order = await prisma.order.create({
       data: {
         ...parsed.data,
@@ -92,9 +106,19 @@ export async function POST(request: Request) {
       },
       include: {
         product: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
       }
     });
     
+    // Update inventory after creating order
+    await updateInventoryForOrder(order.id);
+
     // Send order confirmation email if user has email
     if (user.email) {
       await sendOrderCreatedEmail(user.email, order);

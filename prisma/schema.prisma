@@ -10,6 +10,19 @@ datasource db {
   schemas  = ["puyuh"]
 }
 
+// Add to schema.prisma
+model Notification {
+  id        Int      @id @default(autoincrement())
+  type      String   // e.g., 'ORDER_CREATED', 'LOW_STOCK', etc.
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userId    Int?     // Optional - if notification is for specific user
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@schema("puyuh")
+}
+
 model User {
   id          Int           @id @default(autoincrement())
   name        String
@@ -19,6 +32,7 @@ model User {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   emailVerified Boolean      @default(false)
+  notifications Notification[]
   verificationToken  String? 
   Address     Address[] 
   Cart        Cart[]
