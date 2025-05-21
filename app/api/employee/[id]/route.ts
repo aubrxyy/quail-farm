@@ -15,7 +15,7 @@ export async function GET(
   context: { params: { id: string } }
 ) {
   try {
-    const { id } = await context.params; // Await params
+    const { id } = context.params; // Await params
     const employeeId = parseInt(id);
 
     const employee = await prisma.employee.findUnique({
