@@ -1,7 +1,7 @@
 
-import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { decrypt } from '@/lib/session';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
 export async function middleware(request: Request) {
   const cookieStore = await cookies();
@@ -9,20 +9,19 @@ export async function middleware(request: Request) {
 
   const url = new URL(request.url);
 
-  if (url.pathname === '/register' || url.pathname === '/login') {
-    if (sessionToken) {
-      try {
-        const session = await decrypt(sessionToken);
+  if (
 
-        if (session?.role === 'ADMIN') {
-          return NextResponse.redirect(new URL('/admin/dashboard', request.url));
-        }
 
-        return NextResponse.redirect(new URL('/', request.url));
-      } catch (error) {
-        console.error('Failed to verify session:', error);
-      }
-    }
+    url.pathname === '/register' ||
+
+
+    url.pathname === '/login' ||
+
+
+    url.pathname.startsWith('/api/auth')
+
+
+  ) {
     return NextResponse.next();
   }
 
