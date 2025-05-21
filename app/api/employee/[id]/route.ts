@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 const updateEmployeeSchema = z.object({
@@ -15,7 +15,7 @@ export async function GET(
   context: { params: { id: string } }
 ) {
   try {
-    const { id } = context.params; // Await params
+    const { id } = context.params; // ✅ Benar
     const employeeId = parseInt(id);
 
     const employee = await prisma.employee.findUnique({
@@ -37,7 +37,7 @@ export async function PUT(
   context: { params: { id: string } }
 ) {
   try {
-    const { id } = await context.params; // Await params
+    const { id } = context.params; // ✅ Ganti semua `await context.params`
     const employeeId = parseInt(id);
     const body = await request.json();
 
@@ -62,7 +62,7 @@ export async function DELETE(
   context: { params: { id: string } }
 ) {
   try {
-    const { id } = await context.params; // Await params
+    const { id } = context.params; // Await params
     const employeeId = parseInt(id);
 
     await prisma.employee.delete({ where: { id: employeeId } });
