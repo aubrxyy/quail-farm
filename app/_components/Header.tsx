@@ -42,7 +42,7 @@ export default function Header() {
       }`}
     >
       <Link href="/" className="flex items-center">
-        <Image width={9} height={9} src="/logo.png" alt="Logo" className="w-36" />
+        <Image width={100} height={100} src="/logo.png" alt="Logo" className="w-36" />
       </Link>
     
       <div className="flex items-center text-brown ">
