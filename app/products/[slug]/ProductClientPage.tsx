@@ -37,17 +37,17 @@ export default function ProductClientPage({ product }: { product: any }) {
   };
 
   // Handle manual input
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value;
-    if (val === '') {
-      setQuantity('');
-      return;
-    }
-    let num = parseInt(val, 10);
-    if (isNaN(num) || num < 1) num = 1;
-    if (num > product.stock) num = product.stock;
-    setQuantity(num);
-  };
+ const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const val = e.target.value;
+  if (val === '') {
+    setQuantity('');
+    return;
+  }
+  let num = parseInt(val, 10);
+  if (isNaN(num) || num < 1) num = 1;
+  if (num > product.stock) num = product.stock;
+  setQuantity(num);
+};
 
   // On blur, reset to 1 if empty
   const handleInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
