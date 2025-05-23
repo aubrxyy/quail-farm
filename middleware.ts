@@ -59,6 +59,11 @@ export async function middleware(request: Request) {
 
   // API route protection for ADMIN users
   if (url.pathname.startsWith('/api')) {
+    
+    if (url.pathname.startsWith('/api/products')) {
+      return NextResponse.next();
+    }
+
     if (!sessionToken) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }

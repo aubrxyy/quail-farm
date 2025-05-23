@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { generateSlug } from '@/lib/utils';
 
 const createProductSchema = z.object({
   name: z.string().min(1),
@@ -50,8 +51,23 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
     }
     
+    // Generate slug from product name
+    const slug = generateSlug(parsed.data.name);
+    
+    // Check if slug already exists
+    const existingProduct = await prisma.product.findFirst({
+      where: { slug }
+    });
+    
+    if (existingProduct) {
+      return NextResponse.json({ error: 'A product with this name already exists' }, { status: 400 });
+    }
+    
     const product = await prisma.product.create({
-      data: parsed.data
+      data: {
+        ...parsed.data,
+        slug
+      }
     });
     
     return NextResponse.json(product, { status: 201 });

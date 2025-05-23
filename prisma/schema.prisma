@@ -27,6 +27,7 @@ model User {
   name        String
   email       String        @unique
   password    String
+  phone       String?        @unique
   role        Role          @default(USER)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -43,6 +44,7 @@ model User {
 model Product {
   id           Int           @id @default(autoincrement())
   name         String
+  slug         String?        @unique
   gambar       String
   deskripsi    String
   harga        Float

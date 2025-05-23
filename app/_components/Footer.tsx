@@ -14,15 +14,15 @@ export function Footer() {
         <div className="flex flex-col lg:flex-row justify-between items-center lg:items-start gap-8">
           {/* Logo Section */}
           <div className="flex flex-col items-center lg:items-start">
-            <Image src="/logo.png" alt="Logo" width={120} height={120} />
+            <Link href="/"><Image src="/logo.png" alt="Logo" width={120} height={120} /></Link>
             <h1 className={`${poppins.className} font-bold text-lg mt-2`}>Cimahpar Quail Farm</h1>
           </div>
 
           {/* Text Section */}
           <div className="text-center lg:text-left lg:w-2/3">
             <p className={`${poppins.className} font-bold text-sm leading-relaxed`}>
-            Kami menawarkan burung puyuh berkualitas yang dikenal dengan produktivitas tinggi, serta telur puyuh yang kaya nutrisi dan lezat. Dengan ukuran kecil namun tangguh, burung puyuh adalah pilihan ideal untuk peternak yang mencari hasil maksimal dalam ruang yang efisien. Selain itu, kami juga menyediakan pakan berkualitas tinggi untuk memastikan kesehatan dan produktivitas optimal burung puyuh Anda. 
-            </p>
+            Cimahpar Quail Farm adalah peternakan burung puyuh yang berlokasi di kawasan asri Cimahpar, Bogor, yang dikenal akan dedikasinya dalam menghasilkan produk unggas berkualitas tinggi. Kami berkomitmen untuk menyediakan berbagai hasil ternak terbaik, 
+            mulai dari telur puyuh segar yang kaya gizi, daging puyuh yang sehat dan lezat, hingga produk sampingan peternakan lainnya, semuanya diproses dengan standar kebersihan dan kesehatan yang ketat.            </p>
           </div>
         </div>
 

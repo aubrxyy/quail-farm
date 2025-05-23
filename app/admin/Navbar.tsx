@@ -14,7 +14,7 @@ const AdminNavbar = () => {
               <li>
                 <Link
                   href="/admin/dashboard"
-                  className={`items-center flex flex-row py-3 pl-8 pr-16 text-sm hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname === '/admin/dashboard' ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
+                  className={`items-center flex flex-row py-3 pl-8 pr-16 text-sm hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname.startsWith ('/admin/dashboard') ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
                 >
                 <Icon icon="la:tachometer-alt" className='mr-6 size-7' />
                   Dashboard
@@ -23,7 +23,7 @@ const AdminNavbar = () => {
               <li>
                 <Link
                   href="/admin/products"
-                  className={`items-center flex flex-row py-3 pl-8 pr-16 text-sm hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname === '/admin/products' ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
+                  className={`items-center flex flex-row py-3 pl-8 pr-16 text-sm hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname.startsWith('/admin/products') ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
                 >
                   <Icon icon="la:th-large" className='mr-6 size-7' />
                   Products
@@ -32,7 +32,7 @@ const AdminNavbar = () => {
               <li>
                 <Link
                   href="/admin/orders"
-                  className={`items-center flex flex-row py-3 pl-8 pr-16 text-sm hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname === '/admin/orders' ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
+                  className={`items-center flex flex-row py-3 pl-8 pr-16 text-sm hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname.startsWith ('/admin/orders') ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
                 >
                   <Icon icon="la:list-alt" className='mr-6 size-7' />
                   Order List
@@ -41,16 +41,16 @@ const AdminNavbar = () => {
               <li>
                 <Link
                   href="/admin/finances"
-                  className={`items-center flex flex-row py-3 pl-8 pr-16 text-sm hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname === '/admin/finances' ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
+                  className={`items-center flex flex-row py-3 pl-8 pr-16 text-sm hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname.startsWith ('/admin/finances') ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
                 >
                   <Icon icon="material-symbols:finance-mode" className='mr-6 size-7' />
                   Finances
                 </Link>
               </li>
               <li>
-                <Link
+                <Link 
                   href="/admin/employees"
-                  className={`items-center flex flex-row py-3 pl-8 pr-16 text-sm hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname === '/admin/employees' ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
+                  className={`items-center flex flex-row py-3 pl-8 pr-16 text-sm hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname.startsWith ('/admin/employees') ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
                 >
                   <Icon icon="ic:baseline-person" className='mr-6 size-7' />
                   Employees
@@ -60,7 +60,7 @@ const AdminNavbar = () => {
               <li>
                 <Link
                   href="/logout"
-                  className={`items-center flex flex-row mt-4 py-3 pl-8 pr-16 text-sm text-red-600 hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname === '/admin/employees' ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
+                  className={`items-center flex flex-row mt-4 py-3 pl-8 pr-16 text-sm text-red-600 hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname.startsWith ('/admin/logout') ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
                 >
                   <Icon icon="quill:off" className='pl-1 mr-6 size-6' />
                   Log out

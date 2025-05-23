@@ -4,7 +4,6 @@ import { z } from 'zod';
 
 const updateProductSchema = z.object({
   name: z.string().min(1).optional(),
-  gambar: z.string().min(1).optional(),
   deskripsi: z.string().min(1).optional(),
   harga: z.number().positive().optional(),
   stock: z.number().int().min(0).optional(),

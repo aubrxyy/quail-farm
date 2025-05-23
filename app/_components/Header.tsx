@@ -40,13 +40,13 @@ export default function Header() {
         isScrolled ? 'bg-white' : 'bg-transparent'
       }`}
     >
-      <div className="flex items-center">
+      <Link href="/" className="flex items-center">
         <img src="/logo.png" alt="Logo" className="w-36" />
-      </div>
+      </Link>
     
-      <div className="flex items-center text-brown">
+      <div className="flex items-center text-brown ">
         {session ? (
-          <div className="flex items-center">
+          <div className="flex items-center gap-x-4">
             <Link href="/cart" className="flex items-center justify-center w-8 h-8 relative">
               <Icon icon="mdi:cart" className="text-[#6B3C10] transition duration-200" width={30} height={30} />
               {cart.length > 0 && (

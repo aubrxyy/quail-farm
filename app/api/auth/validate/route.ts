@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { verify } from 'jsonwebtoken';
+import { prisma } from '@/lib/prisma';
 
 const SECRET = process.env.SESSION_SECRET!;
 
@@ -13,8 +14,23 @@ export async function GET(request: Request) {
   }
 
   try {
-    const session = verify(token, SECRET);
-    return NextResponse.json({ valid: true, session });
+    const session: any = verify(token, SECRET);
+
+    const user = await prisma.user.findUnique({
+      where: { id: session.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+      },
+    });
+
+    if (!user) {
+      return NextResponse.json({ valid: false, error: 'User not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ valid: true, user });
   } catch {
     return NextResponse.json({ valid: false, error: 'Invalid session' }, { status: 401 });
   }

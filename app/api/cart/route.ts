@@ -55,6 +55,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Get product stock
+    const product = await prisma.product.findUnique({
+      where: { id: productId },
+      select: { stock: true }
+    });
+
+    if (!product) {
+      return NextResponse.json(
+        { error: 'Product not found' },
+        { status: 404 }
+      );
+    }
+
     // Check if product exists in user's cart
     const existingCartItem = await prisma.cart.findFirst({
       where: {
@@ -63,12 +76,24 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    const requestedQty = quantity || 1;
+    const newQty = existingCartItem
+      ? existingCartItem.quantity + requestedQty
+      : requestedQty;
+
+        if (newQty > product.stock) {
+      return NextResponse.json(
+        { error: `Stok tidak cukup. Maksimal ${product.stock} item dapat ditambahkan ke keranjang. Cek lagi keranjangmu.` },
+        { status: 400 }
+      );
+    }
+
     if (existingCartItem) {
       // Update quantity if item already exists
       const updatedCartItem = await prisma.cart.update({
         where: { id: existingCartItem.id },
         data: {
-          quantity: existingCartItem.quantity + (quantity || 1),
+          quantity: newQty,
         },
         include: {
           user: true,
@@ -83,7 +108,7 @@ export async function POST(req: NextRequest) {
         data: {
           userId,
           productId,
-          quantity: quantity || 1,
+          quantity: requestedQty,
         },
         include: {
           user: true,

@@ -26,16 +26,15 @@ export function Detail() {
 
     return (
         <>
-        <div className="bg-[#EDB943] min-h-screen p-10">
+        <div className="bg-[#EDB943] min-h-screen p-10 mt-28 pb-36">
             <div className="grid grid-cols-3 grid-rows-2 gap-8 max-w-6xl mx-auto mt-8">
                 {/* About Us - lebih lebar */}
-                <div className="bg-white rounded-xl p-8 flex flex-col justify-between col-span-2 row-span-1">
-                    <h2 className={`${poppR.className} text-3xl text-black`}>
+                <div className="bg-white rounded-xl p-8 flex flex-col  justify-between col-span-2 row-span-1">
+                    <h2 className={`${poppR.className} text-4xl text-black`}>
                         <span className="font-bold">TENTANG</span> KAMI
                     </h2>
-                    <p className={`${poppR.className} text-black text-lg mt-2 mb-12 font-semibold`}>
-                    Cimahpar Quail Farm adalah peternakan burung puyuh yang berlokasi di kawasan asri Cimahpar, Bogor, yang dikenal akan dedikasinya dalam menghasilkan produk unggas berkualitas tinggi. Kami berkomitmen untuk menyediakan berbagai hasil ternak terbaik, 
-                    mulai dari telur puyuh segar yang kaya gizi, daging puyuh yang sehat dan lezat, hingga produk sampingan peternakan lainnya, semuanya diproses dengan standar kebersihan dan kesehatan yang ketat.</p>
+                    <p className={`${poppR.className} text-black text-xl text-justify mt-2 mb-8 font-semibold`}>
+                    Cimahpar Quail Farm menyediakan produk burung puyuh berkualitas, mulai dari telur puyuh segar yang kaya protein dan dipercaya membantu meningkatkan stamina serta kesehatan mata. Selain itu, tersedia juga puyuh potong yang rendah lemak dan baik untuk memenuhi kebutuhan asupan protein hewani keluarga. Dengan standar peternakan higienis, Cimahpar Quail Farm berkomitmen menghadirkan produk puyuh sehat dan bernutrisi untuk mendukung gaya hidup sehat pelanggan.</p>
                 </div>
                 {/* Contact Us */}
                 <div className="bg-white rounded-xl p-8 flex flex-col items-center justify-center col-span-1 row-span-1">
