@@ -26,7 +26,7 @@ export default function Profile() {
   return (
     <div className='bg-[#F7F4E8] min-h-screen p-10 text-black'>
       <div className="flex flex-col md:flex-row p-6 ml-8">
-        <div className="flex flex-col items-center md:w-1/3 mb-6 bg-[#E6DCB8] mr-8 rounded rounded-3xl">
+        <div className="flex flex-col items-center md:w-1/3 mb-6 bg-[#E6DCB8] mr-8 rounded">
           <div className="w-24 h-24 rounded-full bg-gray-300 mb-4 mt-10"></div>
           <h2 className="text-lg font-bold">{`${fullName}`}</h2>
           <p className="text-gray-600">{email}</p>

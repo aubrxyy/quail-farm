@@ -14,7 +14,7 @@ export function Footer() {
         <div className="flex flex-col lg:flex-row justify-between items-center lg:items-start gap-8">
           {/* Logo Section */}
           <div className="flex flex-col items-center lg:items-start">
-            <Image src="/logo.png" alt="Logo" width={120} height={120} />
+            <Link href="/"><Image src="/logo.png" alt="Logo" width={120} height={120} /></Link>
             <h1 className={`${poppins.className} font-bold text-lg mt-2`}>Cimahpar Quail Farm</h1>
           </div>
 
