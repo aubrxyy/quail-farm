@@ -14,7 +14,7 @@ export async function GET() {
   try {
     const employees = await prisma.employee.findMany();
     return NextResponse.json(employees);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch employees' }, { status: 500 });
   }
 }
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     });
     
     return NextResponse.json(employee, { status: 201 });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to create employee' }, { status: 500 });
   }
 }

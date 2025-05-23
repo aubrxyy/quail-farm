@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Icon } from '@iconify/react';
+import Image from 'next/image';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -41,7 +42,7 @@ export default function Header() {
       }`}
     >
       <Link href="/" className="flex items-center">
-        <img src="/logo.png" alt="Logo" className="w-36" />
+        <Image width={9} height={9} src="/logo.png" alt="Logo" className="w-36" />
       </Link>
     
       <div className="flex items-center text-brown ">

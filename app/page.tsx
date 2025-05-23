@@ -1,4 +1,3 @@
-import localFont from 'next/font/local';
 import { Detail } from "./_components/Detail";
 import { Footer } from "./_components/Footer";
 import Header from "./_components/Header";

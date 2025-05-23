@@ -41,8 +41,6 @@ export async function signup(formData: FormData) {
     await sendVerificationEmail(email, verificationToken);
     redirect('/verification-pending');
 
-    await createSession(user.id, user.role);
-    redirect('/');
   } catch (error) {
     return { errors: { email: ["Email is already in use."] } };
   }

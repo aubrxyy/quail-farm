@@ -5,7 +5,7 @@ import { decrypt } from '@/lib/session';
 import { cookies } from 'next/headers';
 
 // POST endpoint to generate a report on demand
-export async function POST(request: Request) {
+export async function POST() {
   try {
     // Only admins can access this endpoint
     const session = (await cookies()).get('session')?.value;

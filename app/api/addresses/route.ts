@@ -13,7 +13,7 @@ const createAddressSchema = z.object({
 });
 
 // Get all addresses for the authenticated user
-export async function GET(request: Request) {
+export async function GET() {
   try {
     // Get the session from cookies
     const session = (await cookies()).get('session')?.value;

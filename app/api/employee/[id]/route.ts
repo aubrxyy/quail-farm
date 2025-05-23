@@ -11,7 +11,6 @@ const updateEmployeeSchema = z.object({
 });
 
 export async function GET(
-  request: Request,
   context: { params: { id: string } }
 ) {
   try {
@@ -27,7 +26,7 @@ export async function GET(
     }
 
     return NextResponse.json(employee);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch employee' }, { status: 500 });
   }
 }
@@ -52,13 +51,12 @@ export async function PUT(
     });
 
     return NextResponse.json(employee);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to update employee' }, { status: 500 });
   }
 }
 
 export async function DELETE(
-  request: Request,
   context: { params: { id: string } }
 ) {
   try {
@@ -67,7 +65,7 @@ export async function DELETE(
 
     await prisma.employee.delete({ where: { id: employeeId } });
     return NextResponse.json({ message: 'Employee deleted successfully' });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to delete employee' }, { status: 500 });
   }
 }

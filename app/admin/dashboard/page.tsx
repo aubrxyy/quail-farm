@@ -9,11 +9,6 @@ const OrderMap = dynamic(() => import('@/app/_components/OrderMap'), {
   ssr: false
 });
 
-import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
-  } from 'recharts';
-import { format, parseISO } from 'date-fns';
-
 const orders = [
   // 3 orders on 2025-05-01
   { id: '1', address: 'Jl. Raya Pajajaran No.1, Bogor Tengah', lat: -6.595, lng: 106.816, customerName: '', products: [], status: 'Completed', date: '2025-05-01' },
@@ -51,34 +46,7 @@ const orders = [
   { id: '25', address: 'Jl. Raya Kemang No.9, Kemang', lat: -6.496, lng: 106.786, customerName: '', products: [], status: 'Completed', date: '2025-06-10' },
 ];
 
-// Group orders by date (assuming date is in 'YYYY-MM-DD' format)
-interface Order {
-    id: string;
-    address: string;
-    lat: number;
-    lng: number;
-    customerName: string;
-    products: string[];
-    status: string;
-    date: string;
-}
-
-interface OrderCountByDate {
-    date: string;
-    count: number;
-}
-
-const getOrderCountsByDate = (orders: Order[]): OrderCountByDate[] => {
-    const counts: Record<string, number> = {};
-    orders.forEach(order => {
-      counts[order.date] = (counts[order.date] || 0) + 1;
-    });
-    return Object.entries(counts).map(([date, count]) => ({ date, count }));
-  };
-
-
 export default function Dashboard() {
-    const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [statusFilter, setStatusFilter] = useState('all');
     return (
        <div className="flex text-black bg-bright-egg-white">

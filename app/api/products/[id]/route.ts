@@ -10,7 +10,6 @@ const updateProductSchema = z.object({
 });
 
 export async function GET(
-  request: Request,
   context: { params: { id: string } }
 ) {
   try {
@@ -27,7 +26,7 @@ export async function GET(
     }
 
     return NextResponse.json(product);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
   }
 }
@@ -52,13 +51,12 @@ export async function PUT(
     });
 
     return NextResponse.json(product);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
   }
 }
 
 export async function DELETE(
-  request: Request,
   context: { params: { id: string } }
 ) {
   try {
@@ -67,7 +65,7 @@ export async function DELETE(
 
     await prisma.product.delete({ where: { id: productId } });
     return NextResponse.json({ message: 'Product deleted successfully' });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
   }
 }

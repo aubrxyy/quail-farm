@@ -1,12 +1,13 @@
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 const PRODUCTS_PER_PAGE = 9;
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<any[]>([]);
-  const [page, setPage] = useState(1);
+  const [page] = useState(1);
   const router = useRouter();
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export default function ProductsPage() {
             key={product.id}
             className="bg-white rounded-2xl shadow p-6 flex flex-col items-center w-80 relative"
           >
-            <img
+            <Image width={160} height={160}
               src={product.gambar}
               alt={product.name}
               className="w-40 h-40 object-contain mb-4"

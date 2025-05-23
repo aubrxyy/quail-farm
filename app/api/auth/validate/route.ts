@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const session: any = verify(token, SECRET);
+    const session = verify(token, SECRET) as { id: number };
 
     const user = await prisma.user.findUnique({
       where: { id: session.id },

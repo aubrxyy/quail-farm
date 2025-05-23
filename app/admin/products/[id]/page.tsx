@@ -1,6 +1,7 @@
 'use client'
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
 
 export default function EditProductPage() {
   const params = useParams();
@@ -161,7 +162,7 @@ export default function EditProductPage() {
         </form>
         <div className="flex-1 flex flex-col items-center justify-center">
           {gambar && (
-            <img src={gambar} alt={name} className="size-96 object-contain mb-4 rounded-xl shadow" />
+            <Image src={gambar} alt={name} width={100} height={100} className="size-96 object-contain mb-4 rounded-xl shadow" />
           )}
         </div>
       </div>

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { decrypt } from '@/lib/session';
 import { cookies } from 'next/headers';
 import { sendOrderStatusUpdateEmail } from '@/lib/email';
-import { updateInventoryForOrder, restockInventoryForCancelledOrder } from '@/lib/inventory';
+import { restockInventoryForCancelledOrder } from '@/lib/inventory';
 
 // Define schema for order updates - only include fields that should be updatable
 const updateOrderSchema = z.object({
