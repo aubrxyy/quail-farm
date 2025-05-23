@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
+// import 'leaflet/dist/leaflet.css';
+// import 'leaflet-defaulticon-compatibility';
+// import 'leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css';
 
 const poppins = Poppins({
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],

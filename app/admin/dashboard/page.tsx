@@ -1,7 +1,85 @@
+'use client'
+
 import Image from "next/image";
+import dynamic from 'next/dynamic';
+import { useState } from 'react'; // if not already imported
+
+
+const OrderMap = dynamic(() => import('@/app/_components/OrderMap'), {
+  ssr: false
+});
+
+import {
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+  } from 'recharts';
+import { format, parseISO } from 'date-fns';
+
+const orders = [
+  // 3 orders on 2025-05-01
+  { id: '1', address: 'Jl. Raya Pajajaran No.1, Bogor Tengah', lat: -6.595, lng: 106.816, customerName: '', products: [], status: 'Completed', date: '2025-05-01' },
+  { id: '2', address: 'Jl. Suryakencana No.10, Bogor Tengah', lat: -6.613, lng: 106.799, customerName: '', products: [], status: 'Processing', date: '2025-05-01' },
+  { id: '3', address: 'Jl. Pandu Raya No.5, Bogor Utara', lat: -6.570, lng: 106.806, customerName: '', products: [], status: 'Completed', date: '2025-05-01' },
+  // 1 order on 2025-05-04
+  { id: '4', address: 'Jl. Raya Cilebut No.8, Tanah Sareal', lat: -6.573, lng: 106.782, customerName: '', products: [], status: 'Processing', date: '2025-05-04' },
+  // 4 orders on 2025-05-07
+  { id: '5', address: 'Jl. Raya Tajur No.20, Bogor Timur', lat: -6.635, lng: 106.830, customerName: '', products: [], status: 'Completed', date: '2025-05-07' },
+  { id: '6', address: 'Jl. Raya Sukasari No.15, Bogor Timur', lat: -6.617, lng: 106.822, customerName: '', products: [], status: 'Processing', date: '2025-05-07' },
+  { id: '7', address: 'Jl. Raya Ciomas No.3, Ciomas', lat: -6.646, lng: 106.770, customerName: '', products: [], status: 'Completed', date: '2025-05-07' },
+  { id: '8', address: 'Jl. Raya Laladon No.7, Dramaga', lat: -6.570, lng: 106.726, customerName: '', products: [], status: 'Processing', date: '2025-05-07' },
+  // 2 orders on 2025-05-10
+  { id: '9', address: 'Jl. Raya Cibinong No.12, Cibinong', lat: -6.485, lng: 106.853, customerName: '', products: [], status: 'Completed', date: '2025-05-10' },
+  { id: '10', address: 'Jl. Raya Parung No.2, Parung', lat: -6.441, lng: 106.741, customerName: '', products: [], status: 'Processing', date: '2025-05-10' },
+  // 5 orders on 2025-05-15
+  { id: '11', address: 'Jl. Raya Batutulis No.1, Bogor Selatan', lat: -6.629, lng: 106.803, customerName: '', products: [], status: 'Completed', date: '2025-05-15' },
+  { id: '12', address: 'Jl. Pahlawan No.9, Bogor Selatan', lat: -6.637, lng: 106.803, customerName: '', products: [], status: 'Processing', date: '2025-05-15' },
+  { id: '13', address: 'Jl. Empang No.3, Bogor Selatan', lat: -6.626, lng: 106.799, customerName: '', products: [], status: 'Completed', date: '2025-05-15' },
+  { id: '14', address: 'Jl. Cipaku Indah No.5, Bogor Selatan', lat: -6.646, lng: 106.803, customerName: '', products: [], status: 'Processing', date: '2025-05-15' },
+  { id: '15', address: 'Jl. Raya Mulyaharja No.2, Bogor Selatan', lat: -6.661, lng: 106.803, customerName: '', products: [], status: 'Completed', date: '2025-05-15' },
+  // 1 order on 2025-05-20
+  { id: '16', address: 'Jl. Raya Cikaret No.10, Cibinong', lat: -6.509, lng: 106.836, customerName: '', products: [], status: 'Processing', date: '2025-05-20' },
+  // 3 orders on 2025-05-25
+  { id: '17', address: 'Jl. Raya Sholeh Iskandar No.1, Tanah Sareal', lat: -6.573, lng: 106.782, customerName: '', products: [], status: 'Completed', date: '2025-05-25' },
+  { id: '18', address: 'Jl. Raya Cemplang No.8, Bogor Barat', lat: -6.561, lng: 106.741, customerName: '', products: [], status: 'Processing', date: '2025-05-25' },
+  { id: '19', address: 'Jl. Raya Gunung Batu No.5, Bogor Barat', lat: -6.573, lng: 106.785, customerName: '', products: [], status: 'Completed', date: '2025-05-25' },
+  // 2 orders on 2025-06-01
+  { id: '20', address: 'Jl. Raya Ciawi No.3, Ciawi', lat: -6.693, lng: 106.900, customerName: '', products: [], status: 'Processing', date: '2025-06-01' },
+  { id: '21', address: 'Jl. Raya Gadog No.2, Ciawi', lat: -6.693, lng: 106.900, customerName: '', products: [], status: 'Completed', date: '2025-06-01' },
+  // 4 orders on 2025-06-10
+  { id: '22', address: 'Jl. Raya Sukaraja No.7, Sukaraja', lat: -6.532, lng: 106.849, customerName: '', products: [], status: 'Processing', date: '2025-06-10' },
+  { id: '23', address: 'Jl. Raya Cileungsi No.4, Cileungsi', lat: -6.412, lng: 106.959, customerName: '', products: [], status: 'Completed', date: '2025-06-10' },
+  { id: '24', address: 'Jl. Raya Bojonggede No.6, Bojonggede', lat: -6.496, lng: 106.821, customerName: '', products: [], status: 'Processing', date: '2025-06-10' },
+  { id: '25', address: 'Jl. Raya Kemang No.9, Kemang', lat: -6.496, lng: 106.786, customerName: '', products: [], status: 'Completed', date: '2025-06-10' },
+];
+
+// Group orders by date (assuming date is in 'YYYY-MM-DD' format)
+interface Order {
+    id: string;
+    address: string;
+    lat: number;
+    lng: number;
+    customerName: string;
+    products: string[];
+    status: string;
+    date: string;
+}
+
+interface OrderCountByDate {
+    date: string;
+    count: number;
+}
+
+const getOrderCountsByDate = (orders: Order[]): OrderCountByDate[] => {
+    const counts: Record<string, number> = {};
+    orders.forEach(order => {
+      counts[order.date] = (counts[order.date] || 0) + 1;
+    });
+    return Object.entries(counts).map(([date, count]) => ({ date, count }));
+  };
 
 
 export default function Dashboard() {
+    const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [statusFilter, setStatusFilter] = useState('all');
     return (
        <div className="flex text-black bg-bright-egg-white">
             <div className="px-8 mt-24 flex flex-col gap-y-6 w-full">
@@ -46,8 +124,29 @@ export default function Dashboard() {
                 </div>
 
 
-                <div className='h-80 bg-white rounded-xl flex justify-center items-center p-4'>
-                    some cool graph
+                
+                <div className="h-120 bg-white rounded-xl p-4 relative">
+                    <div className="absolute bottom-5 left-5 z-50 shadow-2xl">
+                        <select
+                            id="statusFilter"
+                            value={statusFilter}
+                            onChange={(e) => setStatusFilter(e.target.value)}
+                            className="border border-gray-300 rounded-md p-2 w-48 bg-white"
+                        >
+                            <option value="all">Filter order (All)</option>
+                            <option value="Processing">Processing</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                    <div className="w-full h-full relative z-0">
+                        <OrderMap
+                            orders={
+                                statusFilter === 'all'
+                                    ? orders
+                                    : orders.filter((order) => order.status === statusFilter)
+                            }
+                        />
+                    </div>
                 </div>
 
                 
@@ -75,6 +174,7 @@ export default function Dashboard() {
                 </div>
             </div>
            
-        </div>
+            </div>
+
     );
 }

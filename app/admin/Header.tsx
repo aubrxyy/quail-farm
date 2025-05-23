@@ -4,7 +4,7 @@ import Link from 'next/link';
 
 export default function AdminHeader() {
   return (
-    <header className="px-10 py-1 fixed bg-egg-white top-0 left-0 right-0 flex justify-between items-center text-black z-10">
+    <header className="px-10 py-1 fixed bg-egg-white top-0 left-0 right-0 flex justify-between items-center text-black z-1000">
         <div className="flex items-center">
           <Link href='/admin/dashboard' className='px-10'>
             <Image src="/logo.png" alt="Cimahpar Quail Farm" width={100} height={100} />
@@ -19,7 +19,7 @@ export default function AdminHeader() {
             </div>
         </div>
         <div>
-          [Admin profile]
+
         </div>
       </header>
   );

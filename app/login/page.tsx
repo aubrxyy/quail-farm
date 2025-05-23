@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Poppins } from 'next/font/google';
+import Link from 'next/link';
 
 const pop = Poppins({
   subsets: ['latin'],
@@ -85,9 +86,9 @@ export default function LoginPage() {
               {isSubmitting ? 'Logging in...' : 'Login'}
             </button>
             <hr className="mt-2" />
-            <div className="flex justify-center">
+            <Link href="/" className="flex justify-center">
               <Image src="/logo.png" width={150} height={100} alt="Cimahpar Quail Farm" className="mt-20" />
-            </div>
+            </Link>
           </form>
         </div>
       </div>

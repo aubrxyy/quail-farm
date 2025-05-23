@@ -59,7 +59,7 @@ const AdminNavbar = () => {
             <hr className='mt-4 opacity-20'/>
               <li>
                 <Link
-                  href="/admin/employees"
+                  href="/logout"
                   className={`items-center flex flex-row mt-4 py-3 pl-8 pr-16 text-sm text-red-600 hover:bg-gradient-to-b hover:bg-yellow-100 rounded-r-xl transition-all ${pathname === '/admin/employees' ? 'bg-gradient-to-br from-yellow-start to-yellow-end' : ''}`}
                 >
                   <Icon icon="quill:off" className='pl-1 mr-6 size-6' />
