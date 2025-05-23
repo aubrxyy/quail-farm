@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
 import { decrypt } from '@/lib/session';
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 // Define schema for address updates
 const updateAddressSchema = z.object({
@@ -51,7 +51,7 @@ export async function GET(
 // Update an address
 export async function PUT(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Get the session from cookies
@@ -63,7 +63,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const addressId = parseInt(context.params.id);
+    const addressId = parseInt(params.id);
     const body = await request.json();
     const parsed = updateAddressSchema.safeParse(body);
 
@@ -99,7 +99,7 @@ export async function PUT(
 // Delete an address
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     // Get the session from cookies
@@ -111,7 +111,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const addressId = parseInt(context.params.id);
+    const addressId = parseInt(params.id);
 
     // Verify address ownership before deleting
     const existingAddress = await prisma.address.findFirst({
