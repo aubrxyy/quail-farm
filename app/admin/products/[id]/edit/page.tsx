@@ -14,13 +14,7 @@ interface Product {
   gambar: string;
 }
 
-interface PageProps {
-  params: {
-    id: string;
-  };
-}
-
-export default function EditProductPage({ params }: PageProps) {
+export default function EditProductPage({ params }: { params: { id: string } }) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
