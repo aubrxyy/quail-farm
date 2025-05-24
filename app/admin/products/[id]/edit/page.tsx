@@ -1,6 +1,6 @@
 import EditProductClient from './EditProductClient';
 
-type PageProps<T extends Record<string, string> = {}> = {
+type PageProps<T extends Record<string, string> = Record<string, string>> = {
   params: T;
   searchParams?: Record<string, string | string[] | undefined>;
 };
