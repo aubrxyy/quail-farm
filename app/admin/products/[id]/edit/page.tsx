@@ -15,11 +15,12 @@ interface Product {
 }
 
 interface PageProps {
-  params: { id: string };
-  searchParams?: { [key: string]: string | string[] | undefined };
+  params: {
+    id: string;
+  };
 }
 
-export default function EditProductPage({ params }: { params: { id: string } }) {
+export default function EditProductPage({ params }: PageProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
