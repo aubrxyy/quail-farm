@@ -1,4 +1,5 @@
 "use client";
+import Header from "@/app/_components/Header";
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -45,6 +46,8 @@ export default function EditAddressPage() {
   if (!id) return <p>Invalid address ID.</p>;
 
   return (
+    <>
+    <Header />
     <div className='bg-[#F7F4E8] min-h-screen p-10 text-black'>
       <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
         <h1 className="text-2xl font-bold mb-8">Edit Alamat</h1>
@@ -108,5 +111,6 @@ export default function EditAddressPage() {
         </form>
       </div>
     </div>
+    </>
   );
 }

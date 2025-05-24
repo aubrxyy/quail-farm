@@ -1,7 +1,8 @@
 "use client";
+import Header from "@/app/_components/Header";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function PageAlamat() {
   const [addresses, setAddresses] = useState<any[]>([]);
@@ -24,13 +25,15 @@ export default function PageAlamat() {
   };
 
   return (
+    <>
+    <Header />
     <div className='bg-[#F7F4E8] min-h-screen p-10 text-black'>
       <Link href="/user" className="mt-4 text-black hover:underline mb-10">
         &lt; Kembali ke userpage
       </Link>
       <div className="max-w-3xl mx-auto p-4">
         <h1 className="text-2xl font-bold mb-4">Alamat Saya</h1>
-        <Link href='/user/alamat/add'>
+        <Link href='/user/address/add'>
           <button className="mb-4 bg-orange-500 text-white px-4 py-2 rounded-md hover:bg-orange-600">
             + Tambah Alamat Baru
           </button>
@@ -63,5 +66,6 @@ export default function PageAlamat() {
         )}
       </div>
     </div>
+    </>
   );
 }

@@ -1,4 +1,5 @@
 "use client";
+import Header from "@/app/_components/Header";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -19,7 +20,7 @@ export default function AddAlamat() {
       body: JSON.stringify({ street, city, province, postalCode }),
     });
     if (res.ok) {
-      router.push("/user/alamat");
+      router.push("/user/address");
     } else {
       const result = await res.json();
       setError(result.error || "Gagal menambah alamat.");
@@ -27,6 +28,8 @@ export default function AddAlamat() {
   };
 
   return (
+    <>
+    <Header />
     <div className='bg-[#F7F4E8] min-h-screen p-10 text-black'>
       <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
         <h1 className="text-2xl font-bold mb-8">Tambah Alamat Baru</h1>
@@ -75,7 +78,7 @@ export default function AddAlamat() {
           <div className="flex justify-end">
             <button
               type="button"
-              onClick={() => router.push('/user/alamat')}
+              onClick={() => router.push('/user/address')}
               className="mr-2 bg-gray-300 px-4 py-2 rounded"
             >
               Batal
@@ -90,5 +93,6 @@ export default function AddAlamat() {
         </form>
       </div>
     </div>
+    </>
   );
 }

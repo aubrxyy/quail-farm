@@ -15,7 +15,7 @@ export default function HistoryOrder() {
   return (
     <>
     <Header />
-    <div className='bg-[#F7F4E8] min-h-screen p-10 text-black pt-20'>
+    <div className='bg-[#F7F4E8] min-h-screen p-10 text-black pt-32 px-40'>
       <Link href="/user" className="mt-4 text-black hover:underline mb-10">
         &lt; Kembali ke userpage
       </Link>
