@@ -1,4 +1,3 @@
-// lib/inventory.ts
 import { prisma } from '@/lib/prisma';
 import { sendLowStockAlert, sendInventoryStatusReport } from '@/lib/email';
 
@@ -37,43 +36,51 @@ export async function updateInventoryForOrder(orderId: number) {
 
 // Create a low stock alert
 async function createLowStockAlert(productId: number, currentStock: number) {
-  // Create a record of the low stock alert
-  await prisma.notification.create({
-    data: {
-      type: 'LOW_STOCK',
-      message: `Product ID ${productId} is running low on stock (${currentStock} remaining)`,
-      read: false
-    }
-  });
-  
-  // Get all admin users to notify
-  const admins = await prisma.user.findMany({
-    where: { role: 'ADMIN' }
-  });
+  try {
+    // Create a record of the low stock alert (only if notification table exists)
+    // Comment out if you don't have a notification table
+    /*
+    await prisma.notification.create({
+      data: {
+        type: 'LOW_STOCK',
+        message: `Product ID ${productId} is running low on stock (${currentStock} remaining)`,
+        read: false
+      }
+    });
+    */
+    
+    // Get all admin users to notify
+    const admins = await prisma.user.findMany({
+      where: { role: 'ADMIN' }
+    });
 
-  // Get the product details
-  const product = await prisma.product.findUnique({
-    where: { id: productId }
-  });
+    // Get the product details
+    const product = await prisma.product.findUnique({
+      where: { id: productId }
+    });
 
-  if (product) {
-    // Send email to all admins
-    for (const admin of admins) {
-      if (admin.email) {
-        try {
-          await sendLowStockAlert(admin.email, {
-            ...product,
-            stock: currentStock // Make sure we use the current stock level
-          });
-        } catch (error) {
-          console.error('Failed to send low stock alert email:', error);
-          // Continue with other admins even if one email fails
+    if (product) {
+      // Send email to all admins
+      for (const admin of admins) {
+        if (admin.email) {
+          try {
+            await sendLowStockAlert(admin.email, {
+              ...product,
+              stock: currentStock // Make sure we use the current stock level
+            });
+          } catch (error) {
+            console.error('Failed to send low stock alert email:', error);
+            // Continue with other admins even if one email fails
+          }
         }
       }
     }
-  }
 
-  return admins;
+    return admins;
+  } catch (error) {
+    console.error('Error creating low stock alert:', error);
+    throw error;
+  }
 }
 
 // Check if inventory is sufficient before order creation
@@ -154,7 +161,6 @@ export async function generateInventoryStatusReport() {
       console.log('No admin users found to notify.');
       return;
     }
-      // The sendInventoryStatusReport is already imported at the top of the file
     
     // Send report to each admin
     const promises = [];
@@ -172,4 +178,110 @@ export async function generateInventoryStatusReport() {
     console.error('Failed to generate inventory status report:', error);
     throw error;
   }
+}
+
+// Update inventory based on order status changes
+export async function updateInventoryOnStatusChange(
+  order: any, 
+  newStatus: string
+): Promise<void> {
+  try {
+    // If order is being cancelled, add the quantity back to inventory
+    if (newStatus === 'CANCELLED' && order.status !== 'CANCELLED') {
+      await prisma.product.update({
+        where: { id: order.productId },
+        data: {
+          stock: {
+            increment: order.orderAmount
+          }
+        }
+      });
+      console.log(`Restored ${order.orderAmount} units to product ${order.productId} stock due to cancellation`);
+    }
+    
+    // If order was cancelled and now is being un-cancelled, reduce inventory again
+    if (order.status === 'CANCELLED' && newStatus !== 'CANCELLED') {
+      // First check if we have enough stock
+      const product = await prisma.product.findUnique({
+        where: { id: order.productId }
+      });
+      
+      if (!product) {
+        throw new Error('Product not found');
+      }
+      
+      if (product.stock < order.orderAmount) {
+        throw new Error(`Insufficient stock. Available: ${product.stock}, Required: ${order.orderAmount}`);
+      }
+      
+      await prisma.product.update({
+        where: { id: order.productId },
+        data: {
+          stock: {
+            decrement: order.orderAmount
+          }
+        }
+      });
+      console.log(`Reduced ${order.orderAmount} units from product ${order.productId} stock due to order reactivation`);
+    }
+  } catch (error) {
+    console.error('Error updating inventory on status change:', error);
+    throw error;
+  }
+}
+
+// Helper function to reduce stock when order is confirmed/processed
+export async function reduceStockForOrder(orderId: number): Promise<void> {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { product: true }
+  });
+
+  if (!order || !order.product) {
+    throw new Error('Order or product not found');
+  }
+
+  // Check if we have enough stock
+  if (order.product.stock < order.orderAmount) {
+    throw new Error(`Insufficient stock for ${order.product.name}. Available: ${order.product.stock}, Required: ${order.orderAmount}`);
+  }
+
+  // Reduce the stock
+  await prisma.product.update({
+    where: { id: order.productId },
+    data: {
+      stock: {
+        decrement: order.orderAmount
+      }
+    }
+  });
+
+  // Check for low stock and alert if necessary
+  const updatedProduct = await prisma.product.findUnique({
+    where: { id: order.productId }
+  });
+
+  if (updatedProduct && updatedProduct.stock <= 10) {
+    await createLowStockAlert(updatedProduct.id, updatedProduct.stock);
+  }
+}
+
+// Helper function to get current stock level
+export async function getCurrentStock(productId: number): Promise<number> {
+  const product = await prisma.product.findUnique({
+    where: { id: productId },
+    select: { stock: true }
+  });
+
+  if (!product) {
+    throw new Error('Product not found');
+  }
+
+  return product.stock;
+}
+
+// Helper function to check if product has sufficient stock
+export async function hasSufficientStock(productId: number, quantity: number): Promise<boolean> {
+  const currentStock = await getCurrentStock(productId);
+  return currentStock >= quantity;
 }
