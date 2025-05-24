@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface Product {
   id: number;
@@ -12,6 +12,11 @@ interface Product {
   stock: number;
   deskripsi: string;
   gambar: string;
+}
+
+interface PageProps {
+  params: { id: string };
+  searchParams?: { [key: string]: string | string[] | undefined };
 }
 
 export default function EditProductPage({ params }: { params: { id: string } }) {
