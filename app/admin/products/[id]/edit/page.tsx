@@ -1,5 +1,10 @@
 import EditProductClient from './EditProductClient';
 
-export default function EditProductWrapper({ params }: { params: { id: string } }) {
+type PageProps<T extends Record<string, string> = {}> = {
+  params: T;
+  searchParams?: Record<string, string | string[] | undefined>;
+};
+
+export default function EditProductWrapper({ params }: PageProps<{ id: string }>) {
   return <EditProductClient id={params.id} />;
 }
