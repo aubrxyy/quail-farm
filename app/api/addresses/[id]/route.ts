@@ -14,7 +14,7 @@ const updateAddressSchema = z.object({
 
 // Get a specific address
 export async function GET(
-  request: Request,
+  req: Request,
   context: { params: { id: string } }
 ) {
   try {
@@ -50,8 +50,8 @@ export async function GET(
 
 // Update an address
 export async function PUT(
-  request: Request,
-  { params }: { params: { id: string } }
+  req: Request,
+  context: { params: { id: string } }
 ) {
   try {
     // Get the session from cookies
@@ -63,8 +63,8 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const addressId = parseInt(params.id);
-    const body = await request.json();
+    const addressId = parseInt(context.params.id);
+    const body = await req.json();
     const parsed = updateAddressSchema.safeParse(body);
 
     if (!parsed.success) {
@@ -98,8 +98,8 @@ export async function PUT(
 
 // Delete an address
 export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
+  req: Request,
+  context: { params: { id: string } }
 ) {
   try {
     // Get the session from cookies
@@ -111,7 +111,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const addressId = parseInt(params.id);
+    const addressId = parseInt(context.params.id);
 
     // Verify address ownership before deleting
     const existingAddress = await prisma.address.findFirst({
