@@ -14,8 +14,8 @@ const updateAddressSchema = z.object({
 
 // Get a specific address
 export async function GET(
-  request: Request,
-  context: { params: { id: string } }
+  req: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
     // Get the session from cookies
@@ -27,7 +27,7 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const addressId = parseInt(context.params.id);
+    const addressId = parseInt(params.id);
 
     // Get the address and verify ownership
     const address = await prisma.address.findFirst({
