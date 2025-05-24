@@ -347,8 +347,8 @@ export default function OrdersPage() {
                   </span>
                 )}
                 {searchTerm && (
-                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
-                    Search: "{searchTerm}"
+                                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                    Search: &quot;{searchTerm}&quot;
                   </span>
                 )}
               </div>

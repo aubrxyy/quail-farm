@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { writeFile, mkdir } from 'fs/promises';
-import { cookies } from 'next/headers';
 import { decrypt } from '@/lib/session';
+import { mkdir, writeFile } from 'fs/promises';
+import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 import path from 'path';
 import { z } from 'zod';
 
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     const search = searchParams.get('search');
 
     // Build where clause
-    let whereClause: any = {};
+    const whereClause: any = {};
 
     if (search) {
       // Create OR conditions for search
