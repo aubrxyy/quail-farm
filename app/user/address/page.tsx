@@ -27,7 +27,7 @@ export default function PageAlamat() {
   return (
     <>
     <Header />
-    <div className='bg-[#F7F4E8] min-h-screen p-10 text-black'>
+    <div className='bg-[#F7F4E8] min-h-screen p-10 text-black pt-28 px-40'>
       <Link href="/user" className="mt-4 text-black hover:underline mb-10">
         &lt; Kembali ke userpage
       </Link>
