@@ -14,8 +14,8 @@ export async function updateInventoryForOrder(orderId: number) {
   }
 
   // Calculate new stock level
-  const newStock = order.product.stock - order.orderAmount;
-  
+  const newStock = order.product.stok - order.orderAmount;
+
   if (newStock < 0) {
     throw new Error('Insufficient stock for product: ' + order.product.name);
   }
@@ -23,7 +23,7 @@ export async function updateInventoryForOrder(orderId: number) {
   // Update product stock
   await prisma.product.update({
     where: { id: order.productId },
-    data: { stock: newStock }
+    data: { stok: newStock }
   });
 
   // Check if stock is running low and notify admins
@@ -93,17 +93,17 @@ export async function checkInventoryAvailability(productId: number, quantity: nu
     throw new Error('Product not found');
   }
 
-  if (product.stock < quantity) {
+  if (product.stok < quantity) {
     return {
       available: false,
-      currentStock: product.stock,
+      currentStock: product.stok,
       requested: quantity
     };
   }
 
   return {
     available: true,
-    currentStock: product.stock,
+    currentStock: product.stok,
     requested: quantity
   };
 }
@@ -121,12 +121,12 @@ export async function restockInventoryForCancelledOrder(orderId: number) {
   }
 
   // Calculate new stock level
-  const newStock = order.product.stock + order.orderAmount;
+  const newStock = order.product.stok + order.orderAmount;
   
   // Update product stock
   await prisma.product.update({
     where: { id: order.productId },
-    data: { stock: newStock }
+    data: { stok: newStock }
   });
   
   return newStock;
@@ -138,12 +138,12 @@ export async function generateInventoryStatusReport() {
     // Get all products with low stock (less than 20 items)
     const lowStockProducts = await prisma.product.findMany({
       where: {
-        stock: {
+        stok: {
           lte: 20 // Products with 20 or fewer items are considered low stock
         }
       },
       orderBy: {
-        stock: 'asc' // Order by stock ascending (lowest first)
+        stok: 'asc' // Order by stock ascending (lowest first)
       }
     });
     
@@ -191,7 +191,7 @@ export async function updateInventoryOnStatusChange(
       await prisma.product.update({
         where: { id: order.productId },
         data: {
-          stock: {
+          stok: {
             increment: order.orderAmount
           }
         }
@@ -210,14 +210,14 @@ export async function updateInventoryOnStatusChange(
         throw new Error('Product not found');
       }
       
-      if (product.stock < order.orderAmount) {
-        throw new Error(`Insufficient stock. Available: ${product.stock}, Required: ${order.orderAmount}`);
+      if (product.stok < order.orderAmount) {
+        throw new Error(`Insufficient stock. Available: ${product.stok}, Required: ${order.orderAmount}`);
       }
       
       await prisma.product.update({
         where: { id: order.productId },
         data: {
-          stock: {
+          stok: {
             decrement: order.orderAmount
           }
         }
@@ -242,15 +242,15 @@ export async function reduceStockForOrder(orderId: number): Promise<void> {
   }
 
   // Check if we have enough stock
-  if (order.product.stock < order.orderAmount) {
-    throw new Error(`Insufficient stock for ${order.product.name}. Available: ${order.product.stock}, Required: ${order.orderAmount}`);
+  if (order.product.stok < order.orderAmount) {
+    throw new Error(`Insufficient stock for ${order.product.name}. Available: ${order.product.stok}, Required: ${order.orderAmount}`);
   }
 
   // Reduce the stock
   await prisma.product.update({
     where: { id: order.productId },
     data: {
-      stock: {
+      stok: {
         decrement: order.orderAmount
       }
     }
@@ -261,8 +261,8 @@ export async function reduceStockForOrder(orderId: number): Promise<void> {
     where: { id: order.productId }
   });
 
-  if (updatedProduct && updatedProduct.stock <= 10) {
-    await createLowStockAlert(updatedProduct.id, updatedProduct.stock);
+  if (updatedProduct && updatedProduct.stok <= 10) {
+    await createLowStockAlert(updatedProduct.id, updatedProduct.stok);
   }
 }
 
@@ -270,14 +270,14 @@ export async function reduceStockForOrder(orderId: number): Promise<void> {
 export async function getCurrentStock(productId: number): Promise<number> {
   const product = await prisma.product.findUnique({
     where: { id: productId },
-    select: { stock: true }
+    select: { stok: true }
   });
 
   if (!product) {
     throw new Error('Product not found');
   }
 
-  return product.stock;
+  return product.stok;
 }
 
 // Helper function to check if product has sufficient stock

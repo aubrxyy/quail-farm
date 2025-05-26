@@ -29,6 +29,12 @@ export default function AddProductPage() {
     setError('');
 
     const formData = new FormData(e.currentTarget);
+    
+    // Debug: Log all form data
+    console.log('Form data being sent:');
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
+    }
 
     try {
       const response = await fetch('/api/products', {
@@ -38,11 +44,15 @@ export default function AddProductPage() {
 
       if (!response.ok) {
         const errorData = await response.json();
+        console.error('Server error:', errorData);
         throw new Error(errorData.error || 'Failed to create product');
       }
 
+      const result = await response.json();
+      console.log('Product created successfully:', result);
       router.push('/admin/products');
     } catch (err) {
+      console.error('Client error:', err);
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
@@ -106,7 +116,7 @@ export default function AddProductPage() {
               name="harga"
               required
               min="0"
-              step="0.01"
+              step="1"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="15000"
             />

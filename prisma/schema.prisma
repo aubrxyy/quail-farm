@@ -42,18 +42,21 @@ model User {
 }
 
 model Product {
-  id           Int           @id @default(autoincrement())
-  name         String
-  slug         String?        @unique
-  gambar       String
-  deskripsi    String
-  harga        Float
-  stock        Int
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  Cart         Cart[]
-  orders       Order[]
+  id        Int      @id @default(autoincrement())
+  name      String
+  slug      String?   @unique
+  gambar    String   @default("")
+  harga     Int
+  deskripsi String   @default("")
+  stok      Int
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
+  // Relations
+  Cart      Cart[]
+  orders    Order[]
+
+  @@map("products")
   @@schema("puyuh")
 }
 
@@ -83,16 +86,35 @@ model Order {
   @@schema("puyuh")
 }
 
+// Add these models to your existing schema
+
 model Employee {
   id         Int      @id @default(autoincrement())
-  employeeId String   @unique
+  employeeId String   @unique @map("employee_id")  // Add this field
   name       String
+  position   String
+  salary     Int
+  hireDate   DateTime @map("hire_date")
+  status     String   @default("Active")
   email      String   @unique
-  address    String
-  salary     Float
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  phone      String
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
+  @@map("employees")
+  @@schema("puyuh")
+}
+
+model ExtraCost {
+  id        Int      @id @default(autoincrement())
+  name      String
+  amount    Int
+  category  String   // Add this field if it doesn't exist
+  date      DateTime @default(now()) // Add this field if it doesn't exist
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("extra_costs")
   @@schema("puyuh")
 }
 

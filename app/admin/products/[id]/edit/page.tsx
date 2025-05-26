@@ -1,45 +1,60 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface Product {
   id: number;
   name: string;
-  slug: string;
-  harga: number;
-  stock: number;
-  deskripsi: string;
+  slug?: string;
   gambar: string;
+  harga: number;
+  deskripsi: string;
+  stok: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export default function EditProductPage({ params }: { params: { id: string } }) {
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function EditProductPage({ params }: PageProps) {
+  const router = useRouter();
+  const resolvedParams = use(params);
+  const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [error, setError] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const router = useRouter();
+  const [product, setProduct] = useState<Product | null>(null);
 
   useEffect(() => {
-    fetchProduct();
-  }, []);
-
-  async function fetchProduct() {
-    try {
-      const response = await fetch(`/api/products/${params.id}`);
-      if (!response.ok) {
-        throw new Error('Product not found');
-      }
-      const data = await response.json();
-      setProduct(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load product');
-    } finally {
-      setLoading(false);
+    if (resolvedParams.id) {
+      fetchProduct();
     }
-  }
+  }, [resolvedParams.id]);
+
+  const fetchProduct = async () => {
+    try {
+      const response = await fetch(`/api/products/${resolvedParams.id}`);
+      if (response.ok) {
+        const productData = await response.json();
+        setProduct(productData);
+        if (productData.gambar) {
+          setImagePreview(productData.gambar);
+        }
+      } else {
+        setError('Product not found');
+        setTimeout(() => router.push('/admin/products'), 2000);
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      setError('Failed to fetch product data');
+    } finally {
+      setFetchLoading(false);
+    }
+  };
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -50,20 +65,25 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
       };
       reader.readAsDataURL(file);
     } else {
-      setImagePreview(null);
+      setImagePreview(product?.gambar || null);
     }
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    setSaving(true);
+    setLoading(true);
     setError('');
 
     const formData = new FormData(e.currentTarget);
+    
+    // Add current image as fallback
+    if (!formData.get('gambar') || (formData.get('gambar') as File).size === 0) {
+      formData.set('currentImage', product?.gambar || '');
+    }
 
     try {
-      const response = await fetch(`/api/products/${params.id}`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/products/${resolvedParams.id}`, {
+        method: 'PUT',
         body: formData,
       });
 
@@ -76,37 +96,30 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
-      setSaving(false);
+      setLoading(false);
     }
   }
 
-  if (loading) {
+  if (fetchLoading) {
     return (
       <div className="p-6 max-w-2xl mx-auto">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 rounded mb-6"></div>
-          <div className="space-y-4">
-            <div className="h-10 bg-gray-300 rounded"></div>
-            <div className="h-10 bg-gray-300 rounded"></div>
-            <div className="h-20 bg-gray-300 rounded"></div>
-          </div>
+          <div className="h-8 bg-gray-300 rounded w-64 mb-6"></div>
+          <div className="h-96 bg-gray-300 rounded"></div>
         </div>
       </div>
     );
   }
 
-  if (error && !product) {
+  if (!product) {
     return (
       <div className="p-6 max-w-2xl mx-auto">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error}
+        <div className="text-center py-8">
+          <h1 className="text-2xl font-bold text-gray-800 mb-4">Product Not Found</h1>
+          <Link href="/admin/products" className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200">
+            Back to Products
+          </Link>
         </div>
-        <Link 
-          href="/admin/products" 
-          className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Back to Products
-        </Link>
       </div>
     );
   }
@@ -114,7 +127,7 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
   return (
     <div className="p-6 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Edit Product</h1>
+        <h1 className="text-2xl font-bold">Edit Product #{product.id}</h1>
         <Link 
           href="/admin/products" 
           className="px-4 py-2 text-gray-600 bg-gray-100 rounded hover:bg-gray-200"
@@ -138,22 +151,24 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             type="text"
             id="name"
             name="name"
+            defaultValue={product.name}
             required
-            defaultValue={product?.name}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Enter product name"
           />
         </div>
 
         <div>
           <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-1">
-            Slug
+            Slug (optional)
           </label>
           <input
             type="text"
             id="slug"
             name="slug"
-            defaultValue={product?.slug}
+            defaultValue={product.slug || ''}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="product-slug (auto-generated if empty)"
           />
         </div>
 
@@ -166,11 +181,12 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
               type="number"
               id="harga"
               name="harga"
+              defaultValue={product.harga}
               required
               min="0"
-              step="0.01"
-              defaultValue={product?.harga}
+              step="1"
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="15000"
             />
           </div>
 
@@ -182,10 +198,11 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
               type="number"
               id="stock"
               name="stock"
+              defaultValue={product.stok}
               required
               min="0"
-              defaultValue={product?.stock}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="100"
             />
           </div>
         </div>
@@ -197,29 +214,17 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
           <textarea
             id="deskripsi"
             name="deskripsi"
+            defaultValue={product.deskripsi}
             required
             rows={4}
-            defaultValue={product?.deskripsi}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="Product description..."
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Current Image
-          </label>
-          {product?.gambar && (
-            <div className="mb-3">
-              <img 
-                src={product.gambar} 
-                alt={product.name} 
-                className="w-32 h-32 object-cover rounded border"
-              />
-            </div>
-          )}
-          
           <label htmlFor="gambar" className="block text-sm font-medium text-gray-700 mb-1">
-            Upload New Image (optional)
+            Product Image
           </label>
           <input
             type="file"
@@ -230,12 +235,14 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <p className="text-sm text-gray-500 mt-1">
-            Leave empty to keep current image. Accepted formats: JPG, PNG, GIF. Max size: 5MB
+            Accepted formats: JPG, PNG, GIF. Max size: 5MB. Leave empty to keep current image.
           </p>
           
           {imagePreview && (
             <div className="mt-3">
-              <p className="text-sm font-medium text-gray-700 mb-2">New Image Preview:</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Image Preview:
+              </p>
               <img 
                 src={imagePreview} 
                 alt="Preview" 
@@ -248,10 +255,10 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
         <div className="flex gap-4">
           <button
             type="submit"
-            disabled={saving}
+            disabled={loading}
             className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {saving ? 'Saving...' : 'Update Product'}
+            {loading ? 'Updating...' : 'Update Product'}
           </button>
           
           <Link
@@ -262,6 +269,16 @@ export default function EditProductPage({ params }: { params: { id: string } }) 
           </Link>
         </div>
       </form>
+
+      {/* Product Info */}
+      <div className="mt-6 bg-blue-50 border border-blue-200 rounded p-4">
+        <h3 className="font-semibold text-blue-800 mb-2">Product Information:</h3>
+        <ul className="text-sm text-blue-700 space-y-1">
+          <li>• Product ID: <strong>#{product.id}</strong></li>
+          <li>• Created: {new Date(product.createdAt).toLocaleDateString('id-ID')}</li>
+          <li>• Last Updated: {new Date(product.updatedAt).toLocaleDateString('id-ID')}</li>
+        </ul>
+      </div>
     </div>
   );
 }
