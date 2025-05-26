@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, use } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { use, useEffect, useState } from 'react';
 
 interface Product {
   id: number;
@@ -191,13 +191,13 @@ export default function EditProductPage({ params }: PageProps) {
           </div>
 
           <div>
-            <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">
-              Stock *
+            <label htmlFor="stok" className="block text-sm font-medium text-gray-700 mb-1">
+              stok *
             </label>
             <input
               type="number"
-              id="stock"
-              name="stock"
+              id="stok"
+              name="stok"
               defaultValue={product.stok}
               required
               min="0"

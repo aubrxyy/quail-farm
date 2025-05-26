@@ -12,7 +12,7 @@ datasource db {
 // Add to schema.prisma
 model Notification {
   id        Int      @id @default(autoincrement())
-  type      String   // e.g., 'ORDER_CREATED', 'LOW_STOCK', etc.
+  type      String   // e.g., 'ORDER_CREATED', 'LOW_stok', etc.
   message   String
   read      Boolean  @default(false)
   createdAt DateTime @default(now())
@@ -133,12 +133,18 @@ model Cart {
 
 model Address {
   id         Int      @id @default(autoincrement())
-  street     String
-  city       String
-  province   String
-  postalCode String
   userId     Int
+  label      String?
+  address     String   // full formatted address (from reverse geocoding)
+  latitude    Float
+  longitude   Float
+  city        String?
+  district    String?
+  postalCode  String?
+  country     String?
   createdAt  DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
   user       User     @relation(fields: [userId], references: [id])
 
   @@schema("puyuh")

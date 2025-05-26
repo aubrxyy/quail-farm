@@ -1,8 +1,8 @@
 // app/api/admin/inventory-report/route.ts
-import { NextResponse } from 'next/server';
 import { generateInventoryStatusReport } from '@/lib/inventory';
 import { decrypt } from '@/lib/session';
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
 
 // POST endpoint to generate a report on demand
 export async function POST() {
@@ -19,7 +19,7 @@ export async function POST() {
     const productsCount = await generateInventoryStatusReport();
     
     return NextResponse.json({ 
-      message: `Inventory report generated for ${productsCount || 0} low stock products`,
+      message: `Inventory report generated for ${productsCount || 0} low stok products`,
       timestamp: new Date().toISOString()
     });
   } catch (error) {

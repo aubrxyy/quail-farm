@@ -71,8 +71,8 @@ export async function middleware(request: Request) {
     try {
       const session = await decrypt(sessionToken);
 
-      if (
-        (url.pathname.startsWith('/api/employee') || url.pathname.startsWith('/api/users')) &&
+            if (
+        url.pathname.startsWith('/api/employee') &&
         session?.role !== 'ADMIN'
       ) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

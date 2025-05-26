@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const cartId = parseInt(params.id);
@@ -9,7 +9,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     return NextResponse.json({ error: 'Quantity must be at least 1' }, { status: 400 });
   }
 
-  // Get cart item and product stock
+  // Get cart item and product stok
   const cartItem = await prisma.cart.findUnique({
     where: { id: cartId },
     include: { product: true }
@@ -17,8 +17,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   if (!cartItem) {
     return NextResponse.json({ error: 'Cart item not found' }, { status: 404 });
   }
-  if (quantity > cartItem.product.stock) {
-    return NextResponse.json({ error: `Stok tidak cukup. Maksimal ${cartItem.product.stock} item dapat ditambahkan ke keranjang.` }, { status: 400 });
+  if (quantity > cartItem.product.stok) {
+    return NextResponse.json({ error: `Stok tidak cukup. Maksimal ${cartItem.product.stok} item dapat ditambahkan ke keranjang.` }, { status: 400 });
   }
 
   const updated = await prisma.cart.update({

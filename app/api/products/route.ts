@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 const createProductSchema = z.object({
@@ -8,7 +8,7 @@ const createProductSchema = z.object({
   gambar: z.string().optional().default(''),
   harga: z.number().positive("Price must be positive"),
   deskripsi: z.string().optional().default(''),
-  stok: z.number().min(0, "Stock cannot be negative"),
+  stok: z.number().min(0, "stok cannot be negative"),
 });
 
 export async function GET(request: Request) {
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       gambar: imagePath,
       harga: Number(formData.get('harga')),
       deskripsi: formData.get('deskripsi') as string || '',
-      stok: Number(formData.get('stock')), // Form field is 'stock' but database is 'stok'
+      stok: Number(formData.get('stok')), // Form field is 'stok' but database is 'stok'
     };
 
     console.log('📝 Product data:', productData);

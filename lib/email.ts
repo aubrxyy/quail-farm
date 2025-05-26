@@ -1,6 +1,6 @@
 // lib/email.ts
-import nodemailer from 'nodemailer';
 import { prisma } from '@/lib/prisma';
+import nodemailer from 'nodemailer';
 
 // Configure transporter (update with your SMTP settings)
 const transporter = nodemailer.createTransport({
@@ -227,22 +227,22 @@ export async function sendAdminOrderNotification(email: string, order: any, cust
   return transporter.sendMail(mailOptions);
 }
 
-// Low stock notification for admins
-export async function sendLowStockAlert(email: string, product: any) {
+// Low stok notification for admins
+export async function sendLowstokAlert(email: string, product: any) {
   const mailOptions = {
     from: `"Quail Farm Inventory" <${process.env.EMAIL_FROM}>`,
     to: email,
-    subject: `⚠️ Low Stock Alert: ${product.name}`,
+    subject: `⚠️ Low stok Alert: ${product.name}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="background-color: #f44336; color: white; padding: 10px 15px; border-radius: 5px;">
-          Low Stock Alert
+          Low stok Alert
         </h2>
         <p>The following product is running low on inventory and requires your attention:</p>
         
         <div style="background-color: #f8f9fa; padding: 15px; border-radius: 4px; margin: 20px 0;">
           <h3 style="margin-top: 0; color: #f44336;">${product.name}</h3>
-          <p><strong>Current Stock:</strong> ${product.stock} units</p>
+          <p><strong>Current stok:</strong> ${product.stok} units</p>
           <p><strong>Product ID:</strong> ${product.id}</p>
           <p><strong>Price:</strong> Rp${product.harga.toLocaleString('id-ID')}</p>
         </div>
@@ -261,13 +261,13 @@ export async function sendLowStockAlert(email: string, product: any) {
 }
 
 // Batch send inventory status report to admins
-export async function sendInventoryStatusReport(email: string, lowStockProducts: any[]) {
-  const productRows = lowStockProducts.map(product => `
+export async function sendInventoryStatusReport(email: string, lowstokProducts: any[]) {
+  const productRows = lowstokProducts.map(product => `
     <tr>
       <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">${product.name}</td>
       <td style="padding: 8px; border-bottom: 1px solid #dee2e6; text-align: center; ${
-        product.stock <= 5 ? 'color: #f44336; font-weight: bold;' : ''
-      }">${product.stock}</td>
+        product.stok <= 5 ? 'color: #f44336; font-weight: bold;' : ''
+      }">${product.stok}</td>
       <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">Rp${product.harga.toLocaleString('id-ID')}</td>
       <td style="padding: 8px; border-bottom: 1px solid #dee2e6;">
         <a href="${process.env.NEXTAUTH_URL}/admin/products/${product.id}" 
@@ -281,19 +281,19 @@ export async function sendInventoryStatusReport(email: string, lowStockProducts:
   const mailOptions = {
     from: `"Quail Farm Inventory System" <${process.env.EMAIL_FROM}>`,
     to: email,
-    subject: `📊 Inventory Status Report - Low Stock Items`,
+    subject: `📊 Inventory Status Report - Low stok Items`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
         <h2 style="background-color: #343a40; color: white; padding: 15px; border-radius: 5px;">
           Inventory Status Report
         </h2>
-        <p>The following products are currently low on stock and may need replenishment:</p>
+        <p>The following products are currently low on stok and may need replenishment:</p>
         
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0; border: 1px solid #dee2e6;">
           <thead>
             <tr style="background-color: #f8f9fa;">
               <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Product Name</th>
-              <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Current Stock</th>
+              <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Current stok</th>
               <th style="padding: 12px; text-align: left; border-bottom: 2px solid #dee2e6;">Price</th>
               <th style="padding: 12px; text-align: center; border-bottom: 2px solid #dee2e6;">Action</th>
             </tr>

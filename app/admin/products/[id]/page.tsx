@@ -1,7 +1,7 @@
 'use client'
-import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
+import { useParams, useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 
 export default function EditProductPage() {
   const params = useParams();
@@ -10,7 +10,7 @@ export default function EditProductPage() {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [description, setDescription] = useState('');
-  const [stock, setStock] = useState('');
+  const [stok, setstok] = useState('');
   const [gambar, setGambar] = useState('');
   const [descError, setDescError] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ export default function EditProductPage() {
         setPrice(product.harga?.toString() || '');
         setDescription(product.deskripsi || '');
         setGambar(product.gambar || '');
-        setStock(product.stock?.toString() || '');
+        setstok(product.stok?.toString() || '');
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -45,7 +45,7 @@ export default function EditProductPage() {
         name,
         harga: Number(price),
         deskripsi: description,
-        stock: Number(stock),
+        stok: Number(stok),
         gambar,
       }),
     });
@@ -97,14 +97,14 @@ export default function EditProductPage() {
             />
             <div className="text-xs text-gray-400">Masukkan harga produk dalam hitungan (/kg)</div>
           </div>
-          {/* Stock */}
+          {/* stok */}
           <div>
             <label className="block font-medium mb-1">Stok Produk</label>
             <input
               type="number"
               className="w-full border rounded-lg px-4 py-2 mb-1"
-              value={stock}
-              onChange={e => setStock(e.target.value)}
+              value={stok}
+              onChange={e => setstok(e.target.value)}
               placeholder="Masukkan stok produk"
               required
               min={0}

@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { Footer } from '@/app/_components/Footer';
+import Header from '@/app/_components/Header';
+import { Poppins } from 'next/font/google';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useState } from 'react';
 import { FaShoppingCart } from 'react-icons/fa';
-import { Poppins } from 'next/font/google';
-import Header from '@/app/_components/Header';
-import { Footer } from '@/app/_components/Footer';
 
 const poppR = Poppins({ subsets: ['latin'], weight: '400' });
 const poppB = Poppins({ subsets: ['latin'], weight: '700' });
@@ -20,11 +20,11 @@ export default function ProductClientPage({ product }: { product: any }) {
   const [adding, setAdding] = useState(false);
   const [toast, setToast] = useState<{ show: boolean; message: string; success: boolean }>({ show: false, message: '', success: true });
 
-  // Increase quantity, but not above stock
+  // Increase quantity, but not above stok
   const increaseQuantity = () => {
     setQuantity(q => {
       const next = (q === '' ? 1 : q) + 1;
-      return next > product.stock ? product.stock : next;
+      return next > product.stok ? product.stok : next;
     });
   };
 
@@ -45,7 +45,7 @@ export default function ProductClientPage({ product }: { product: any }) {
   }
   let num = parseInt(val, 10);
   if (isNaN(num) || num < 1) num = 1;
-  if (num > product.stock) num = product.stock;
+  if (num > product.stok) num = product.stok;
   setQuantity(num);
 };
 
@@ -110,7 +110,7 @@ export default function ProductClientPage({ product }: { product: any }) {
                 </span>
               </p>
               <div className="text-md text-gray-500 mb-6">
-                Stok tersedia: <span className="font-bold text-[#EDC043]">{product.stock}</span>
+                Stok tersedia: <span className="font-bold text-[#EDC043]">{product.stok}</span>
               </div>
               <div className="flex items-center mb-4 gap-4">
                 <div className="flex items-center bg-[#EEEBDE] rounded-2xl p-3 w-40 justify-center" >
@@ -122,7 +122,7 @@ export default function ProductClientPage({ product }: { product: any }) {
                   <input
                     type="number"
                     min={1}
-                    max={product.stock}
+                    max={product.stok}
                     value={quantity}
                     onChange={handleInputChange}
                     onBlur={handleInputBlur}
@@ -136,13 +136,13 @@ export default function ProductClientPage({ product }: { product: any }) {
                     onClick={increaseQuantity}
                     className="text-[#EDC043] font-bold rounded-full w-8 h-8 flex items-center justify-center"
                     aria-label="Tambah"
-                    disabled={quantity === '' ? false : quantity >= product.stock}
+                    disabled={quantity === '' ? false : quantity >= product.stok}
                   >+</button>
                 </div>
                 <button
                   onClick={handleAddToCart}
                   className="bg-gradient-to-br from-yellow-start to-yellow-end hover:cursor-pointer text-black px-8 py-4 rounded-2xl font-semibold flex items-center"
-                  disabled={adding || product.stock === 0}
+                  disabled={adding || product.stok === 0}
                 >
                   <FaShoppingCart className="mr-2" />
                   {adding ? 'Menambah...' : 'Tambah ke keranjang'}

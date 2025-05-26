@@ -6,10 +6,14 @@ import { cookies } from 'next/headers';
 
 // Define schema for address creation
 const createAddressSchema = z.object({
-  street: z.string().min(1, 'Street is required'),
+  label: z.string().min(1, 'Label is required'),
+  address: z.string().min(1, 'Address is required'),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
   city: z.string().min(1, 'City is required'),
-  province: z.string().min(1, 'Province is required'),
+  district: z.string().min(1, 'District is required'),
   postalCode: z.string().min(1, 'Postal code is required'),
+  country: z.string().min(1, 'Country is required'),
 });
 
 // Get all addresses for the authenticated user

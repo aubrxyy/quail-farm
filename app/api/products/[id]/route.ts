@@ -1,5 +1,5 @@
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
 const updateProductSchema = z.object({
@@ -8,7 +8,7 @@ const updateProductSchema = z.object({
   gambar: z.string().optional().default(''),
   harga: z.number().positive("Price must be positive"),
   deskripsi: z.string().optional().default(''),
-  stok: z.number().min(0, "Stock cannot be negative"),
+  stok: z.number().min(0, "stok cannot be negative"),
 });
 
 interface RouteParams {
@@ -73,7 +73,7 @@ export async function PUT(request: Request, { params }: RouteParams) {
       gambar: imagePath,
       harga: Number(formData.get('harga')),
       deskripsi: formData.get('deskripsi') as string || '',
-      stok: Number(formData.get('stock')),
+      stok: Number(formData.get('stok')),
     };
 
     console.log('📝 Updating product with data:', productData);

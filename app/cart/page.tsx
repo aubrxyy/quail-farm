@@ -23,8 +23,8 @@ export default function CartPage() {
   }, []);
 
   // Update quantity
-  const updateQuantity = async (cartId: number, newQty: number, maxStock: number) => {
-    if (newQty < 1 || newQty > maxStock) return;
+  const updateQuantity = async (cartId: number, newQty: number, maxstok: number) => {
+    if (newQty < 1 || newQty > maxstok) return;
     setError(null);
     const res = await fetch(`/api/cart/${cartId}`, {
       method: 'PUT',
@@ -99,14 +99,14 @@ export default function CartPage() {
           <div className="flex items-center justify-center gap-2">
             <button
               className="bg-[#EDC043] text-white p-1 rounded-full font-bold text-md cursor-pointer"
-              onClick={() => updateQuantity(item.id, item.quantity - 1, item.product?.stock ?? 0)}
+              onClick={() => updateQuantity(item.id, item.quantity - 1, item.product?.stok ?? 0)}
               disabled={item.quantity <= 1}
             >-</button>
             <span className="mx-2">{item.quantity}</span>
             <button
               className="bg-[#EDC043] text-white p-1 rounded-full font-bold text-md cursor-pointer"
-              onClick={() => updateQuantity(item.id, item.quantity + 1, item.product?.stock ?? 0)}
-              disabled={item.quantity >= item.product?.stock}
+              onClick={() => updateQuantity(item.id, item.quantity + 1, item.product?.stok ?? 0)}
+              disabled={item.quantity >= item.product?.stok}
             >+</button>
           </div>
         </td>

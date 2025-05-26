@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 interface Product {
   id: number;
@@ -19,7 +19,7 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
-  const [stockFilter, setStockFilter] = useState<'all' | 'inStock' | 'lowStock' | 'outOfStock'>('all');
+  const [stokFilter, setstokFilter] = useState<'all' | 'instok' | 'lowstok' | 'outOfstok'>('all');
 
   const fetchProducts = async () => {
     try {
@@ -75,22 +75,22 @@ export default function ProductsPage() {
   };
 
   const filteredProducts = products.filter(product => {
-    switch (stockFilter) {
-      case 'inStock':
+    switch (stokFilter) {
+      case 'instok':
         return product.stok > 10;
-      case 'lowStock':
+      case 'lowstok':
         return product.stok > 0 && product.stok <= 10;
-      case 'outOfStock':
+      case 'outOfstok':
         return product.stok === 0;
       default:
         return true;
     }
   });
 
-  const getStockStatus = (stock: number) => {
-    if (stock === 0) return { text: 'Out of Stock', color: 'text-red-600 bg-red-100' };
-    if (stock <= 10) return { text: 'Low Stock', color: 'text-yellow-600 bg-yellow-100' };
-    return { text: 'In Stock', color: 'text-green-600 bg-green-100' };
+  const getstokStatus = (stok: number) => {
+    if (stok === 0) return { text: 'Out of stok', color: 'text-red-600 bg-red-100' };
+    if (stok <= 10) return { text: 'Low stok', color: 'text-yellow-600 bg-yellow-100' };
+    return { text: 'In stok', color: 'text-green-600 bg-green-100' };
   };
 
   if (loading) {
@@ -147,14 +147,14 @@ export default function ProductsPage() {
             />
           </div>
           <select
-            value={stockFilter}
-            onChange={(e) => setStockFilter(e.target.value as any)}
+            value={stokFilter}
+            onChange={(e) => setstokFilter(e.target.value as any)}
             className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="all">All Products</option>
-            <option value="inStock">In Stock</option>
-            <option value="lowStock">Low Stock</option>
-            <option value="outOfStock">Out of Stock</option>
+            <option value="instok">In stok</option>
+            <option value="lowstok">Low stok</option>
+            <option value="outOfstok">Out of stok</option>
           </select>
         </div>
       </div>
@@ -181,7 +181,7 @@ export default function ProductsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProducts.map((product) => {
-            const stockStatus = getStockStatus(product.stok);
+            const stokStatus = getstokStatus(product.stok);
             return (
               <div key={product.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                 {/* Product Image */}
@@ -208,8 +208,8 @@ export default function ProductsPage() {
                 <div className="p-4">
                   <div className="flex items-start justify-between mb-2">
                     <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{product.name}</h3>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${stockStatus.color}`}>
-                      {stockStatus.text}
+                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${stokStatus.color}`}>
+                      {stokStatus.text}
                     </span>
                   </div>
 
@@ -220,7 +220,7 @@ export default function ProductsPage() {
                       <p className="text-2xl font-bold text-blue-600">
                         Rp {product.harga.toLocaleString('id-ID')}
                       </p>
-                      <p className="text-sm text-gray-500">Stock: {product.stok} units</p>
+                      <p className="text-sm text-gray-500">stok: {product.stok} units</p>
                     </div>
                   </div>
 
@@ -264,19 +264,19 @@ export default function ProductsPage() {
             <p className="text-2xl font-bold text-green-600">
               {products.filter(p => p.stok > 10).length}
             </p>
-            <p className="text-sm text-gray-600">In Stock</p>
+            <p className="text-sm text-gray-600">In stok</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-yellow-600">
               {products.filter(p => p.stok > 0 && p.stok <= 10).length}
             </p>
-            <p className="text-sm text-gray-600">Low Stock</p>
+            <p className="text-sm text-gray-600">Low stok</p>
           </div>
           <div className="text-center">
             <p className="text-2xl font-bold text-red-600">
               {products.filter(p => p.stok === 0).length}
             </p>
-            <p className="text-sm text-gray-600">Out of Stock</p>
+            <p className="text-sm text-gray-600">Out of stok</p>
           </div>
         </div>
       </div>

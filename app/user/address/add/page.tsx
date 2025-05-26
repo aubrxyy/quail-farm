@@ -1,23 +1,52 @@
 "use client";
 import Header from "@/app/_components/Header";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "/leaflet/marker-icon-2x.png",
+  iconUrl: "/leaflet/marker-icon.png",
+  shadowUrl: "/leaflet/marker-shadow.png",
+});
+
+function LocationMarker({ setLatitude, setLongitude }: {
+  setLatitude: (lat: number) => void;
+  setLongitude: (lng: number) => void;
+}) {
+  useMapEvents({
+    click(e) {
+      setLatitude(e.latlng.lat);
+      setLongitude(e.latlng.lng);
+    },
+  });
+  return null;
+}
 
 export default function AddAlamat() {
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
   const [province, setProvince] = useState("");
   const [postalCode, setPostalCode] = useState("");
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setError("");
+    if (latitude === null || longitude === null) {
+      setError("Silakan pilih lokasi di peta.");
+      return;
+    }
     const res = await fetch("/api/addresses", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ street, city, province, postalCode }),
+      body: JSON.stringify({ street, city, province, postalCode, latitude, longitude }),
     });
     if (res.ok) {
       router.push("/user/address");
@@ -30,9 +59,32 @@ export default function AddAlamat() {
   return (
     <>
     <Header />
-    <div className='bg-[#F7F4E8] min-h-screen p-10 text-black'>
-      <div className="max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
+      <div className='bg-[#F7F4E8] min-h-screen pt-28 px-40 text-black'>
+      <Link href="/user" className="mt-4 text-black hover:underline mb-10">
+        &lt; Kembali ke userpage
+      </Link>
+      <div className="max-w-3xl mt-12 mx-auto p-6 bg-white rounded-lg shadow-md">
         <h1 className="text-2xl font-bold mb-8">Tambah Alamat Baru</h1>
+        <div className="h-64 mb-6">
+          <MapContainer
+            center={[-6.2, 106.8]}
+            zoom={13}
+            scrollWheelZoom={false}
+            className="h-full w-full rounded"
+            style={{ height: "100%", width: "100%" }}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            {latitude && longitude && (
+              <Marker position={[latitude, longitude]}>
+                <Popup>Lokasi yang dipilih</Popup>
+              </Marker>
+            )}
+            <LocationMarker setLatitude={setLatitude} setLongitude={setLongitude} />
+          </MapContainer>
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label className="block text-sm font-medium">Jalan/Street</label>

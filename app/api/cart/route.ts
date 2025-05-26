@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { decrypt } from '@/lib/session';
 import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
 
 
 // Get all cart items or filter by userId
@@ -55,10 +55,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Get product stock
+    // Get product stok
     const product = await prisma.product.findUnique({
       where: { id: productId },
-      select: { stock: true }
+      select: { stok: true }
     });
 
     if (!product) {
@@ -81,9 +81,9 @@ export async function POST(req: NextRequest) {
       ? existingCartItem.quantity + requestedQty
       : requestedQty;
 
-        if (newQty > product.stock) {
+        if (newQty > product.stok) {
       return NextResponse.json(
-        { error: `Stok tidak cukup. Maksimal ${product.stock} item dapat ditambahkan ke keranjang. Cek lagi keranjangmu.` },
+        { error: `Stok tidak cukup. Maksimal ${product.stok} item dapat ditambahkan ke keranjang. Cek lagi keranjangmu.` },
         { status: 400 }
       );
     }

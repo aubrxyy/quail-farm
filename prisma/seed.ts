@@ -6,6 +6,8 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting database seeding...');
 
+  
+
   // Create admin user
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@cimahpar.com' },
@@ -32,7 +34,7 @@ async function main() {
     },
   });
 
-  // Create products with stok field (not stock)
+  // Create products with stok field (not stok)
   const products = await Promise.all([
     prisma.product.upsert({
       where: { slug: 'telur-puyuh-segar' },
@@ -43,7 +45,7 @@ async function main() {
         gambar: '/images/telur-puyuh.jpg',
         deskripsi: 'Telur puyuh segar berkualitas tinggi, kaya protein dan nutrisi.',
         harga: 15000,
-        stok: 100, // ✅ Use 'stok' not 'stock'
+        stok: 100, // ✅ Use 'stok' not 'stok'
       },
     }),
     prisma.product.upsert({
@@ -83,6 +85,44 @@ async function main() {
       },
     }),
   ]);
+
+    // ...existing code...
+  
+  // Create addresses for users
+  const addresses = await Promise.all([
+    prisma.address.upsert({
+      where: { id: 1 }, // Use a unique field if you want true upsert, or just create if empty
+      update: {},
+      create: {
+        userId: user1.id,
+        label: 'Rumah',
+        address: 'Jl. Mawar No. 123, Jakarta Selatan',
+        latitude: -6.2607,
+        longitude: 106.7816,
+        city: 'Jakarta Selatan',
+        district: 'Kebayoran Baru',
+        postalCode: '12160',
+        country: 'Indonesia',
+      },
+    }),
+    prisma.address.upsert({
+      where: { id: 2 },
+      update: {},
+      create: {
+        userId: adminUser.id,
+        label: 'Kantor',
+        address: 'Jl. Admin No. 789, Surabaya',
+        latitude: -7.2575,
+        longitude: 112.7521,
+        city: 'Surabaya',
+        district: 'Tegalsari',
+        postalCode: '60261',
+        country: 'Indonesia',
+      },
+    }),
+  ]);
+  
+  console.log(`   - ${addresses.length} addresses`);
 
   console.log('✅ Database seeded successfully!');
   console.log('📊 Created:');
