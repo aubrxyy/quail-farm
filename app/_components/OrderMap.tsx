@@ -33,11 +33,18 @@ export default function OrderMap({ orders }: OrderMapProps) {
         shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
       });
 
-      const { MapContainer, TileLayer, Marker, Popup } = await import('react-leaflet');
+      const { MapContainer, TileLayer, Marker, Popup, Polygon } = await import('react-leaflet');
 
       const center: [number, number] = orders.length
         ? [orders[0].lat, orders[0].lng]
         : [-6.2, 106.8];
+
+      const jabodetabekBounds: [number, number][] = [
+        [-6.9, 106.3],
+        [-6.9, 107.1],
+        [-5.8, 107.1],
+        [-5.8, 106.3],
+      ];
 
       setLeafletMap(
         <MapContainer
@@ -49,6 +56,10 @@ export default function OrderMap({ orders }: OrderMapProps) {
           <TileLayer
             attribution='&copy; <a href="https://osm.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <Polygon
+            positions={jabodetabekBounds}
+            pathOptions={{ color: 'blue', fillOpacity: 0.1 }}
           />
           {orders.map(order => (
             <Marker key={order.id} position={[order.lat, order.lng]}>
