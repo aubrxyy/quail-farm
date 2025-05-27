@@ -1,107 +1,131 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 
 interface Product {
   id: number;
   name: string;
-  gambar: string;
-  harga: number;
   deskripsi: string;
+  harga: number;
   stok: number;
-  createdAt: string;
-  updatedAt: string;
+  gambar: string;
+  slug?: string;
 }
 
 export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [search, setSearch] = useState('');
-  const [stokFilter, setstokFilter] = useState<'all' | 'instok' | 'lowstok' | 'outOfstok'>('all');
+  
+  // Filter states
+  const [filters, setFilters] = useState({
+    priceMin: '',
+    priceMax: '',
+    stockMin: '',
+    stockMax: '',
+    stockStatus: 'all' // 'all', 'in-stock', 'out-of-stock', 'low-stock'
+  });
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    applyFilters();
+  }, [products, filters]);
 
   const fetchProducts = async () => {
     try {
-      console.log('🔍 Fetching products from frontend...');
-      
-      const url = search ? `/api/products?search=${encodeURIComponent(search)}` : '/api/products';
-      const response = await fetch(url);
-      
-      console.log('📡 Response status:', response.status);
-      
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ API Error:', errorData);
-        throw new Error(`HTTP ${response.status}: ${errorData.error || 'Unknown error'}`);
+      const response = await fetch('/api/products');
+      if (response.ok) {
+        const data = await response.json();
+        setProducts(data);
       }
-      
-      const data = await response.json();
-      console.log('✅ Products fetched:', data.length, 'items');
-      
-      setProducts(data);
-      setError('');
-    } catch (error) {
-      console.error('❌ Failed to fetch products:', error);
-      setError('Failed to fetch products: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } catch (err) {
+      setError('Failed to fetch products');
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    console.log('🚀 Products page mounted, fetching data...');
-    fetchProducts();
-  }, [search]);
+  const applyFilters = () => {
+    let filtered = [...products];
+
+    // Price filters
+    if (filters.priceMin) {
+      filtered = filtered.filter(p => p.harga >= Number(filters.priceMin));
+    }
+    if (filters.priceMax) {
+      filtered = filtered.filter(p => p.harga <= Number(filters.priceMax));
+    }
+
+    // Stock filters
+    if (filters.stockMin) {
+      filtered = filtered.filter(p => p.stok >= Number(filters.stockMin));
+    }
+    if (filters.stockMax) {
+      filtered = filtered.filter(p => p.stok <= Number(filters.stockMax));
+    }
+
+    // Stock status filter
+    if (filters.stockStatus === 'in-stock') {
+      filtered = filtered.filter(p => p.stok > 0);
+    } else if (filters.stockStatus === 'out-of-stock') {
+      filtered = filtered.filter(p => p.stok === 0);
+    } else if (filters.stockStatus === 'low-stock') {
+      filtered = filtered.filter(p => p.stok > 0 && p.stok <= 10);
+    }
+
+    setFilteredProducts(filtered);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      priceMin: '',
+      priceMax: '',
+      stockMin: '',
+      stockMax: '',
+      stockStatus: 'all'
+    });
+  };
 
   const handleDelete = async (id: number) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
 
     try {
       const response = await fetch(`/api/products/${id}`, {
-        method: 'DELETE',
+        method: 'DELETE'
       });
 
       if (response.ok) {
-        setProducts(products.filter(product => product.id !== id));
+        fetchProducts();
       } else {
-        const errorData = await response.json();
-        alert('Error deleting product: ' + errorData.error);
+        setError('Failed to delete product');
       }
-    } catch (error) {
-      console.error('Error deleting product:', error);
-      alert('Failed to delete product');
+    } catch (err) {
+      setError('Network error');
     }
   };
 
-  const filteredProducts = products.filter(product => {
-    switch (stokFilter) {
-      case 'instok':
-        return product.stok > 10;
-      case 'lowstok':
-        return product.stok > 0 && product.stok <= 10;
-      case 'outOfstok':
-        return product.stok === 0;
-      default:
-        return true;
-    }
-  });
-
-  const getstokStatus = (stok: number) => {
-    if (stok === 0) return { text: 'Out of stok', color: 'text-red-600 bg-red-100' };
-    if (stok <= 10) return { text: 'Low stok', color: 'text-yellow-600 bg-yellow-100' };
-    return { text: 'In stok', color: 'text-green-600 bg-green-100' };
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('id-ID', {
+      style: 'currency',
+      currency: 'IDR',
+      minimumFractionDigits: 0
+    }).format(amount);
   };
 
   if (loading) {
     return (
-      <div className="p-6 max-w-full overflow-hidden">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-300 rounded w-64 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-64 bg-gray-300 rounded-xl"></div>
-            ))}
+      <div className="flex text-black bg-bright-egg-white min-h-screen">
+        <div className="px-8 pt-4 flex flex-col gap-y-6 w-full">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-300 rounded w-48"></div>
+            <div className="h-16 bg-white rounded-lg"></div>
+            <div className="h-64 bg-gray-300 rounded"></div>
           </div>
         </div>
       </div>
@@ -109,174 +133,250 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="p-6 max-w-full overflow-hidden">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Products Management</h1>
-        <Link
-          href="/admin/products/add"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-fit"
-        >
-          Add New Product
-        </Link>
-      </div>
-
-      {/* Error Display */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
-          {error}
-          <button 
-            onClick={fetchProducts}
-            className="ml-4 underline hover:no-underline"
-          >
-            Retry
-          </button>
-        </div>
-      )}
-
-      {/* Search and Filters */}
-      <div className="bg-white rounded-xl p-6 shadow-sm mb-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+    <div className="flex text-black bg-bright-egg-white min-h-screen">
+      <div className="px-8 pt-4 flex flex-col gap-y-6 w-full max-w-full overflow-hidden">
+        
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Products Management</h1>
+            <p className="text-gray-600 mt-1">Manage your product catalog</p>
           </div>
-          <select
-            value={stokFilter}
-            onChange={(e) => setstokFilter(e.target.value as any)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="all">All Products</option>
-            <option value="instok">In stok</option>
-            <option value="lowstok">Low stok</option>
-            <option value="outOfstok">Out of stok</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Products Grid */}
-      {filteredProducts.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 shadow-sm text-center">
-          <div className="text-gray-500 mb-4">
-            <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2M4 13h2" />
-            </svg>
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-          <p className="text-gray-500 mb-4">
-            {search ? 'Try adjusting your search terms.' : 'Get started by adding your first product.'}
-          </p>
           <Link
             href="/admin/products/add"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
           >
-            Add New Product
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add Product
           </Link>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredProducts.map((product) => {
-            const stokStatus = getstokStatus(product.stok);
-            return (
-              <div key={product.id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                {/* Product Image */}
-                <div className="aspect-square bg-gray-100 overflow-hidden">
-                  {product.gambar ? (
-                    <img
-                      src={product.gambar}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.src = '/placeholder-image.png';
-                      }}
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                  )}
-                </div>
 
-                {/* Product Info */}
-                <div className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{product.name}</h3>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${stokStatus.color}`}>
-                      {stokStatus.text}
-                    </span>
-                  </div>
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
+          </div>
+        )}
 
-                  <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.deskripsi}</p>
+        {/* Filters */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            {/* Price Range */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Min Price</label>
+              <input
+                type="number"
+                placeholder="0"
+                value={filters.priceMin}
+                onChange={(e) => setFilters({...filters, priceMin: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Max Price</label>
+              <input
+                type="number"
+                placeholder="∞"
+                value={filters.priceMax}
+                onChange={(e) => setFilters({...filters, priceMax: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
 
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <p className="text-2xl font-bold text-blue-600">
-                        Rp {product.harga.toLocaleString('id-ID')}
-                      </p>
-                      <p className="text-sm text-gray-500">stok: {product.stok} units</p>
-                    </div>
-                  </div>
+            {/* Stock Range */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Min Stock</label>
+              <input
+                type="number"
+                placeholder="0"
+                value={filters.stockMin}
+                onChange={(e) => setFilters({...filters, stockMin: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Max Stock</label>
+              <input
+                type="number"
+                placeholder="∞"
+                value={filters.stockMax}
+                onChange={(e) => setFilters({...filters, stockMax: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              />
+            </div>
 
-                  {/* Actions */}
-                  <div className="flex gap-2">
-                    <Link
-                      href={`/admin/products/${product.id}/edit`}
-                      className="flex-1 bg-blue-600 text-white text-center py-2 px-3 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                    >
-                      Edit
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(product.id)}
-                      className="flex-1 bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
-                    >
-                      Delete
-                    </button>
-                  </div>
+            {/* Stock Status */}
+            <div>
+              <label className="block text-xs font-medium text-gray-700 mb-1">Stock Status</label>
+              <select
+                value={filters.stockStatus}
+                onChange={(e) => setFilters({...filters, stockStatus: e.target.value})}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="all">All Products</option>
+                <option value="in-stock">In Stock</option>
+                <option value="out-of-stock">Out of Stock</option>
+                <option value="low-stock">Low Stock (≤10)</option>
+              </select>
+            </div>
+          </div>
 
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <p className="text-xs text-gray-500">
-                      Created: {new Date(product.createdAt).toLocaleDateString('id-ID')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          {/* Filter Actions */}
+          <div className="flex items-center justify-between mt-4">
+            <div className="text-sm text-gray-600">
+              {filteredProducts.length !== products.length && (
+                <span>Showing {filteredProducts.length} of {products.length} products</span>
+              )}
+            </div>
+            <button
+              onClick={clearFilters}
+              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+            >
+              Clear Filters
+            </button>
+          </div>
         </div>
-      )}
 
-      {/* Stats Summary */}
-      <div className="mt-8 bg-white rounded-xl p-6 shadow-sm">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Products Summary</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <div className="text-center">
-            <p className="text-2xl font-bold text-blue-600">{products.length}</p>
-            <p className="text-sm text-gray-600">Total Products</p>
+        {/* Table Container - Fixed in proper container */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Product
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Price
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Stock
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredProducts.map((product) => (
+                  <tr key={product.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-16 w-16">
+                          {product.gambar ? (
+                            <img 
+                              className="h-16 w-16 rounded object-cover border" 
+                              src={product.gambar} 
+                              alt={product.name}
+                            />
+                          ) : (
+                            <div className="h-16 w-16 bg-gray-200 rounded flex items-center justify-center">
+                              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {product.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            ID: #{product.id}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900 max-w-xs">
+                        {product.deskripsi || 'No description'}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {formatCurrency(product.harga)}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{product.stok} items</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        product.stok > 10 
+                          ? 'bg-green-100 text-green-800' 
+                          : product.stok > 0
+                          ? 'bg-yellow-100 text-yellow-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {product.stok > 10 ? 'In Stock' : product.stok > 0 ? 'Low Stock' : 'Out of Stock'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                      <Link
+                        href={`/admin/products/${product.id}/edit`}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(product.id)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-green-600">
-              {products.filter(p => p.stok > 10).length}
-            </p>
-            <p className="text-sm text-gray-600">In stok</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-yellow-600">
-              {products.filter(p => p.stok > 0 && p.stok <= 10).length}
-            </p>
-            <p className="text-sm text-gray-600">Low stok</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl font-bold text-red-600">
-              {products.filter(p => p.stok === 0).length}
-            </p>
-            <p className="text-sm text-gray-600">Out of stok</p>
+
+          {filteredProducts.length === 0 && !loading && (
+            <div className="text-center py-12">
+              <div className="text-gray-400 mb-4">
+                <svg className="w-24 h-24 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">
+                {products.length === 0 ? 'No products found' : 'No products match your filters'}
+              </h3>
+              <p className="text-gray-500 mb-4">
+                {products.length === 0 
+                  ? 'Start by adding your first product to the catalog.' 
+                  : 'Try adjusting your filter criteria.'}
+              </p>
+              {products.length === 0 ? (
+                <Link
+                  href="/admin/products/add"
+                  className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Add First Product
+                </Link>
+              ) : (
+                <button
+                  onClick={clearFilters}
+                  className="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Product count info */}
+        <div className="flex justify-between items-center">
+          <div className="text-gray-500 text-sm">
+            Showing {filteredProducts.length > 0 ? '1' : '0'}-{filteredProducts.length} of {products.length} products
           </div>
         </div>
       </div>

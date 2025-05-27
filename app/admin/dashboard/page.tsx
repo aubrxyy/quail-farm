@@ -1,76 +1,84 @@
-'use client'
+'use client';
 
-import OrderMap from '@/app/_components/OrderMap';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import { useState, useEffect } from 'react';
+import DijkstraMap from '@/app/_components/DijkstraMap';
 
-interface DashboardData {
-  summary: {
-    totalRevenue: number;
-    totalExpenses: number;
-    netProfit: number;
-    totalOrders: number;
-    activeEmployees: number;
-    totalProducts: number;
-    totalUsers: number;
-  };
-  recentOrders: any[];
-  topProducts: any[];
-  monthlyTrends: {
-    revenue: number[];
-    orders: number[];
-    labels: string[];
+interface Product {
+  id: number;
+  name: string;
+  harga: number;
+  stok: number;
+}
+
+interface Order {
+  id: number;
+  userId: number;
+  productId: number;
+  customerName: string;
+  customerAddress: string;
+  orderDate: string;
+  orderType: string;
+  orderAmount: number;
+  totalPrice: number;
+  status: string;
+  product: Product;
+  user?: {
+    addresses?: Array<{
+      latitude: number;
+      longitude: number;
+      address: string;
+    }>;
   };
 }
 
-const orders = [
-    // 3 orders on 2025-05-01
-    { id: '1', address: 'Jl. Raya Pajajaran No.1, Bogor Tengah', lat: -6.595, lng: 106.816, customerName: 'John Doe', products: ['Quail Eggs'], status: 'Completed', date: '2025-05-01', amount: 12, total: 150000 },
-    { id: '2', address: 'Jl. Suryakencana No.10, Bogor Tengah', lat: -6.613, lng: 106.799, customerName: 'Jane Smith', products: ['Fresh Eggs'], status: 'Processing', date: '2025-05-01', amount: 24, total: 300000 },
-    { id: '3', address: 'Jl. Pandu Raya No.5, Bogor Utara', lat: -6.570, lng: 106.806, customerName: 'Bob Johnson', products: ['Premium Eggs'], status: 'Completed', date: '2025-05-01', amount: 18, total: 225000 },
-    // 1 order on 2025-05-04
-    { id: '4', address: 'Jl. Raya Cilebut No.8, Tanah Sareal', lat: -6.573, lng: 106.782, customerName: 'Alice Brown', products: ['Organic Eggs'], status: 'Processing', date: '2025-05-04', amount: 30, total: 450000 },
-    // 4 orders on 2025-05-07
-    { id: '5', address: 'Jl. Raya Tajur No.20, Bogor Timur', lat: -6.635, lng: 106.830, customerName: 'Charlie Wilson', products: ['Standard Eggs'], status: 'Completed', date: '2025-05-07', amount: 15, total: 180000 },
-    { id: '6', address: 'Jl. Raya Sukasari No.15, Bogor Timur', lat: -6.617, lng: 106.822, customerName: 'Diana Lee', products: ['Fresh Eggs'], status: 'Processing', date: '2025-05-07', amount: 20, total: 250000 },
-    { id: '7', address: 'Jl. Raya Ciomas No.3, Ciomas', lat: -6.646, lng: 106.770, customerName: 'Edward Kim', products: ['Premium Eggs'], status: 'Completed', date: '2025-05-07', amount: 25, total: 312500 },
-    { id: '8', address: 'Jl. Raya Laladon No.7, Dramaga', lat: -6.570, lng: 106.726, customerName: 'Fiona Chen', products: ['Organic Eggs'], status: 'Processing', date: '2025-05-07', amount: 22, total: 330000 },
-    // 2 orders on 2025-05-10
-    { id: '9', address: 'Jl. Raya Cibinong No.12, Cibinong', lat: -6.485, lng: 106.853, customerName: 'George Park', products: ['Quail Eggs'], status: 'Completed', date: '2025-05-10', amount: 16, total: 200000 },
-    { id: '10', address: 'Jl. Raya Parung No.2, Parung', lat: -6.441, lng: 106.741, customerName: 'Helen Wang', products: ['Fresh Eggs'], status: 'Processing', date: '2025-05-10', amount: 28, total: 350000 },
-    // 5 orders on 2025-05-15
-    { id: '11', address: 'Jl. Raya Batutulis No.1, Bogor Selatan', lat: -6.629, lng: 106.803, customerName: 'Ivan Rodriguez', products: ['Standard Eggs'], status: 'Completed', date: '2025-05-15', amount: 14, total: 168000 },
-    { id: '12', address: 'Jl. Pahlawan No.9, Bogor Selatan', lat: -6.637, lng: 106.803, customerName: 'Julia Martinez', products: ['Premium Eggs'], status: 'Processing', date: '2025-05-15', amount: 26, total: 325000 },
-    { id: '13', address: 'Jl. Empang No.3, Bogor Selatan', lat: -6.626, lng: 106.799, customerName: 'Kevin Thompson', products: ['Organic Eggs'], status: 'Completed', date: '2025-05-15', amount: 32, total: 480000 },
-    { id: '14', address: 'Jl. Cipaku Indah No.5, Bogor Selatan', lat: -6.646, lng: 106.803, customerName: 'Lisa Anderson', products: ['Fresh Eggs'], status: 'Processing', date: '2025-05-15', amount: 19, total: 237500 },
-    { id: '15', address: 'Jl. Raya Mulyaharja No.2, Bogor Selatan', lat: -6.661, lng: 106.803, customerName: 'Mike Davis', products: ['Quail Eggs'], status: 'Completed', date: '2025-05-15', amount: 21, total: 262500 },
-    // 1 order on 2025-05-20
-    { id: '16', address: 'Jl. Raya Cikaret No.10, Cibinong', lat: -6.509, lng: 106.836, customerName: 'Nancy Taylor', products: ['Standard Eggs'], status: 'Processing', date: '2025-05-20', amount: 17, total: 204000 },
-    // 3 orders on 2025-05-25
-    { id: '17', address: 'Jl. Raya Sholeh Iskandar No.1, Tanah Sareal', lat: -6.573, lng: 106.782, customerName: 'Oscar Garcia', products: ['Premium Eggs'], status: 'Completed', date: '2025-05-25', amount: 23, total: 287500 },
-    { id: '18', address: 'Jl. Raya Cemplang No.8, Bogor Barat', lat: -6.561, lng: 106.741, customerName: 'Paula White', products: ['Organic Eggs'], status: 'Processing', date: '2025-05-25', amount: 27, total: 405000 },
-    { id: '19', address: 'Jl. Raya Gunung Batu No.5, Bogor Barat', lat: -6.573, lng: 106.785, customerName: 'Quinn Lee', products: ['Fresh Eggs'], status: 'Completed', date: '2025-05-25', amount: 24, total: 300000 },
-    // 2 orders on 2025-06-01
-    { id: '20', address: 'Jl. Raya Ciawi No.3, Ciawi', lat: -6.693, lng: 106.900, customerName: 'Rachel Brown', products: ['Quail Eggs'], status: 'Processing', date: '2025-06-01', amount: 18, total: 225000 },
-    { id: '21', address: 'Jl. Raya Gadog No.2, Ciawi', lat: -6.693, lng: 106.900, customerName: 'Sam Wilson', products: ['Standard Eggs'], status: 'Completed', date: '2025-06-01', amount: 20, total: 240000 },
-    // 4 orders on 2025-06-10
-    { id: '22', address: 'Jl. Raya Sukaraja No.7, Sukaraja', lat: -6.532, lng: 106.849, customerName: 'Tina Johnson', products: ['Premium Eggs'], status: 'Processing', date: '2025-06-10', amount: 29, total: 362500 },
-    { id: '23', address: 'Jl. Raya Cileungsi No.4, Cileungsi', lat: -6.412, lng: 106.959, customerName: 'Uma Patel', products: ['Organic Eggs'], status: 'Completed', date: '2025-06-10', amount: 31, total: 465000 },
-    { id: '24', address: 'Jl. Raya Bojonggede No.6, Bojonggede', lat: -6.496, lng: 106.821, customerName: 'Victor Chen', products: ['Fresh Eggs'], status: 'Processing', date: '2025-06-10', amount: 25, total: 312500 },
-    { id: '25', address: 'Jl. Raya Kemang No.9, Kemang', lat: -6.496, lng: 106.786, customerName: 'Wendy Kim', products: ['Quail Eggs'], status: 'Completed', date: '2025-06-10', amount: 22, total: 275000 },
-  ];
+interface ExtraCost {
+  id: number;
+  name: string;
+  amount: number;
+  category: string;
+  date: string;
+}
+
+interface Employee {
+  id: number;
+  name: string;
+  position: string;
+  salary: number;
+  status: string;
+}
+
+interface DashboardStats {
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  totalCustomers: number;
+  lowStockProducts: number;
+  pendingOrders: number;
+}
 
 export default function DashboardPage() {
-
-    const [statusFilter, setStatusFilter] = useState('all');
-
-    const filteredOrders = statusFilter === 'all' 
-        ? orders 
-        : orders.filter(order => order.status === statusFilter);
-    
-  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [extraCosts, setExtraCosts] = useState<ExtraCost[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    totalRevenue: 0,
+    totalOrders: 0,
+    totalProducts: 0,
+    totalCustomers: 0,
+    lowStockProducts: 0,
+    pendingOrders: 0
+  });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState<'overview' | 'monthly'>('overview');
+
+  // Farm address (you can make this configurable later)
+  const farmAddress = {
+    lat: -6.605898920570076,
+    lng: 106.8517554378589,
+    address: 'Kp. Cibitung, Nagrak, Kec. Sukaraja, Kabupaten Bogor, Jawa Barat 16151'
+};
 
   useEffect(() => {
     fetchDashboardData();
@@ -80,44 +88,118 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       
-      // Fetch financial data
-      const financeResponse = await fetch('/api/finances?period=month');
-      const financeData = financeResponse.ok ? await financeResponse.json() : null;
-      
-      // Fetch products count
-      const productsResponse = await fetch('/api/products');
-      const productsData = productsResponse.ok ? await productsResponse.json() : [];
-      
-      // Fetch users count
-      const usersResponse = await fetch('/api/users');
-      const usersData = usersResponse.ok ? await usersResponse.json() : [];
-      
-      if (financeData) {
-        setDashboardData({
-          summary: {
-            totalRevenue: financeData.summary.totalRevenue,
-            totalExpenses: financeData.summary.totalExpenses,
-            netProfit: financeData.summary.netProfit,
-            totalOrders: financeData.summary.totalOrders,
-            activeEmployees: financeData.summary.activeEmployees,
-            totalProducts: productsData.length || 0,
-            totalUsers: usersData.length || 0,
-          },
-          recentOrders: financeData.revenue.orders.slice(0, 5) || [],
-          topProducts: [], // You can calculate this from orders data if needed
-          monthlyTrends: {
-            revenue: Object.values(financeData.revenue.byDay || {}),
-            orders: [],
-            labels: Object.keys(financeData.revenue.byDay || {}),
-          }
-        });
+      // Fetch all data in parallel
+      const [ordersRes, productsRes, extraCostsRes, employeesRes] = await Promise.all([
+        fetch('/api/orders'),
+        fetch('/api/products'),
+        fetch('/api/extra-costs'),
+        fetch('/api/employees')
+      ]);
+
+      if (ordersRes.ok) {
+        const ordersData = await ordersRes.json();
+        setOrders(ordersData);
+      } else {
+        console.error('Orders fetch failed:', ordersRes.status);
       }
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+
+      if (productsRes.ok) {
+        const productsData = await productsRes.json();
+        setProducts(productsData);
+      } else {
+        console.error('Products fetch failed:', productsRes.status);
+      }
+
+      if (extraCostsRes.ok) {
+        const extraCostsData = await extraCostsRes.json();
+        setExtraCosts(extraCostsData);
+      } else {
+        console.error('Extra costs fetch failed:', extraCostsRes.status);
+      }
+
+      if (employeesRes.ok) {
+        const employeesData = await employeesRes.json();
+        setEmployees(employeesData);
+      } else {
+        console.error('Employees fetch failed:', employeesRes.status);
+      }
+
+    } catch (err) {
+      setError('Failed to fetch dashboard data');
+      console.error('Dashboard fetch error:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  // Calculate stats from real data
+  useEffect(() => {
+    if (orders.length > 0 || products.length > 0) {
+      const totalRevenue = orders
+        .filter(order => order.status === 'DELIVERED')
+        .reduce((sum, order) => sum + order.totalPrice, 0);
+
+      const uniqueCustomers = new Set(orders.map(order => order.userId)).size;
+      const lowStockProducts = products.filter(product => product.stok <= 10).length;
+      const pendingOrders = orders.filter(order => 
+        ['PENDING', 'PROCESSING'].includes(order.status)
+      ).length;
+
+      setStats({
+        totalRevenue,
+        totalOrders: orders.length,
+        totalProducts: products.length,
+        totalCustomers: uniqueCustomers,
+        lowStockProducts,
+        pendingOrders
+      });
+    }
+  }, [orders, products]);
+
+  // Transform orders for map component with proper null checks
+  const mapOrders = orders.map(order => {
+    // Get coordinates with fallback to farm location
+    const userAddress = order.user?.addresses?.[0];
+    const lat = userAddress?.latitude || farmAddress.lat;
+    const lng = userAddress?.longitude || farmAddress.lng;
+    
+    return {
+      id: order.id.toString(),
+      customerName: order.customerName,
+      customerAddress: order.customerAddress,
+      lat,
+      lng,
+      status: order.status,
+      product: { name: order.product?.name || 'Unknown Product' },
+      totalPrice: order.totalPrice,
+      orderAmount: order.orderAmount
+    };
+  });
+
+  // Get recent orders (last 15 for scrolling)
+  const recentOrders = orders
+    .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime())
+    .slice(0, 15);
+
+  // Get low stock products
+  const lowStockProductsList = products
+    .filter(product => product.stok <= 10)
+    .sort((a, b) => a.stok - b.stok);
+
+  // Calculate monthly expenses
+  const currentMonth = new Date().getMonth();
+  const currentYear = new Date().getFullYear();
+  const monthlyExpenses = extraCosts
+    .filter(cost => {
+      const costDate = new Date(cost.date);
+      return costDate.getMonth() === currentMonth && costDate.getFullYear() === currentYear;
+    })
+    .reduce((sum, cost) => sum + cost.amount, 0);
+
+  // Calculate employee expenses
+  const monthlyEmployeeCosts = employees
+    .filter(emp => emp.status === 'Active')
+    .reduce((sum, emp) => sum + emp.salary, 0);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -127,49 +209,32 @@ export default function DashboardPage() {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case 'delivered': return 'text-green-600 bg-green-100';
+      case 'processing': return 'text-yellow-600 bg-yellow-100';
+      case 'pending': return 'text-blue-600 bg-blue-100';
+      case 'cancelled': return 'text-red-600 bg-red-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
   };
-
-  const profitColor = useMemo(() => {
-    if (!dashboardData) return 'text-gray-600';
-    return dashboardData.summary.netProfit >= 0 ? 'text-green-600' : 'text-red-600';
-  }, [dashboardData]);
 
   if (loading) {
     return (
       <div className="flex text-black bg-bright-egg-white min-h-screen">
-        <div className="px-8 flex flex-col gap-y-6 w-full">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 rounded w-64 mb-6"></div>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full mb-6">
+        <div className="px-8 pt-4 flex flex-col gap-y-6 w-full">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-300 rounded w-48"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map(i => (
-                <div key={i} className="h-24 bg-gray-300 rounded-xl"></div>
+                <div key={i} className="h-32 bg-gray-300 rounded-xl"></div>
               ))}
             </div>
-            <div className="h-64 bg-gray-300 rounded-xl"></div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!dashboardData) {
-    return (
-      <div className="flex text-black bg-bright-egg-white min-h-screen">
-        <div className="px-8 pt-24 flex flex-col gap-y-6 w-full">
-          <div className="text-center py-8">
-            <h1 className="text-2xl font-bold text-gray-800 mb-4">Unable to load dashboard data</h1>
-            <button 
-              onClick={fetchDashboardData}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-            >
-              Retry
-            </button>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {[1, 2].map(i => (
+                <div key={i} className="h-64 bg-gray-300 rounded-xl"></div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -179,247 +244,390 @@ export default function DashboardPage() {
   return (
     <div className="flex text-black bg-bright-egg-white min-h-screen">
       <div className="px-8 pt-4 flex flex-col gap-y-6 w-full">
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-            <p className="text-gray-600 mt-1">Welcome back! Here's your business overview.</p>
-          </div>
-          <div className="text-sm text-gray-500">
-            Last updated: {new Date().toLocaleString('id-ID')}
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
-          {/* Total Revenue */}
-          <div className='h-24 bg-white rounded-xl flex justify-between p-4'>
-            <div className='text-lg flex flex-col justify-start text-left'>
-              <span className='font-medium text-gray-600'>Total Revenue</span>
-              <span className='font-semibold text-xl text-green-600'>
-                {formatCurrency(dashboardData.summary.totalRevenue)}
-              </span>
-            </div>
-            <div className="flex items-center">
-              <Image src="/totalsales.svg" alt="revenue" width={50} height={50}/>
-            </div>
-          </div>
-
-          {/* Total Orders */}
-          <div className='h-24 bg-white rounded-xl flex justify-between p-4'>
-            <div className='text-lg flex flex-col justify-start text-left'>
-              <span className='font-medium text-gray-600'>Total Orders</span>
-              <span className='font-semibold text-2xl text-blue-600'>{dashboardData.summary.totalOrders}</span>
-            </div>
-            <div className="flex items-center">
-              <Image src="/totalorders.svg" alt="orders" width={50} height={50}/>
-            </div>
-          </div>
-
-          {/* Net Profit */}
-          <div className='h-24 bg-white rounded-xl flex justify-between p-4'>
-            <div className='text-lg flex flex-col justify-start text-left'>
-              <span className='font-medium text-gray-600'>Net Profit</span>
-              <span className={`font-semibold text-xl ${profitColor}`}>
-                {formatCurrency(dashboardData.summary.netProfit)}
-              </span>
-            </div>
-            <div className="flex items-center">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                dashboardData.summary.netProfit >= 0 ? 'bg-green-100' : 'bg-red-100'
-              }`}>
-                <svg className={`w-6 h-6 ${profitColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  {dashboardData.summary.netProfit >= 0 ? (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
-                  ) : (
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                  )}
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Active Employees */}
-          <div className='h-24 bg-white rounded-xl flex justify-between p-4'>
-            <div className='text-lg flex flex-col justify-start text-left'>
-              <span className='font-medium text-gray-600'>Active Employees</span>
-              <span className='font-semibold text-2xl text-purple-600'>{dashboardData.summary.activeEmployees}</span>
-            </div>
-            <div className="flex items-center">
-              <Image src="/totalusers.svg" alt="employees" width={50} height={50}/>
-            </div>
+        
+        {/* Header with Tabs */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your quail farm.</p>
+          
+          {/* Tab Navigation */}
+          <div className="mt-4 border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'overview'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('monthly')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'monthly'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Monthly Summary
+              </button>
+            </nav>
           </div>
         </div>
 
-        {/* Secondary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full">
-          <div className='h-20 bg-white rounded-xl flex justify-between p-4'>
-            <div className='flex flex-col justify-center'>
-              <span className='font-medium text-gray-600'>Total Products</span>
-              <span className='font-semibold text-xl text-gray-800'>{dashboardData.summary.totalProducts}</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                </svg>
-              </div>
-            </div>
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            {error}
           </div>
+        )}
 
-          <div className='h-20 bg-white rounded-xl flex justify-between p-4'>
-            <div className='flex flex-col justify-center'>
-              <span className='font-medium text-gray-600'>Total Customers</span>
-              <span className='font-semibold text-xl text-gray-800'>{dashboardData.summary.totalUsers}</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className='h-20 bg-white rounded-xl flex justify-between p-4'>
-            <div className='flex flex-col justify-center'>
-              <span className='font-medium text-gray-600'>Total Expenses</span>
-              <span className='font-semibold text-xl text-red-600'>{formatCurrency(dashboardData.summary.totalExpenses)}</span>
-            </div>
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <OrderMap orders={filteredOrders.map(order => ({
-                          id: order.id,
-                          customerName: order.customerName,
-                          customerAddress: order.address, // map address to customerAddress
-                          lat: order.lat,
-                          lng: order.lng,
-                          status: order.status,
-                          product: { name: order.products[0] }, // map products[0] to product object
-                          totalPrice: order.total,
-                          orderAmount: order.amount
-                      }))} />
-              
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Orders */}
-          <div className="bg-white rounded-xl p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-700">Recent Orders</h2>
-              <Link href="/admin/orders" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                View All
-              </Link>
-            </div>
-            <div className="space-y-3">
-              {dashboardData.recentOrders.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <p>No recent orders</p>
+        {/* Tab Content */}
+        {activeTab === 'overview' && (
+          <>
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                    <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
+                  </div>
+                  <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                  </div>
                 </div>
-              ) : (
-                dashboardData.recentOrders.map((order: any) => (
-                  <div key={order.id} className="flex justify-between items-center p-3 border border-gray-100 rounded-lg hover:bg-gray-50">
-                    <div className="flex-1">
-                      <div className="font-medium">{order.customerName}</div>
-                      <div className="text-sm text-gray-500">{order.product?.name || 'Unknown Product'}</div>
-                      <div className="text-xs text-gray-400">{formatDate(order.orderDate)}</div>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
+                  </div>
+                  <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Active Products</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.totalProducts}</p>
+                  </div>
+                  <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <svg className="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">Total Customers</p>
+                    <p className="text-2xl font-bold text-gray-900">{stats.totalCustomers}</p>
+                  </div>
+                  <div className="h-12 w-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <svg className="h-6 w-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Alert Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {stats.lowStockProducts > 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                      </svg>
                     </div>
-                    <div className="text-right">
-                      <div className="font-semibold text-green-600">{formatCurrency(order.totalPrice)}</div>
-                      <div className={`text-xs px-2 py-1 rounded-full ${
-                        order.status === 'DELIVERED' ? 'bg-green-100 text-green-700' :
-                        order.status === 'PROCESSING' ? 'bg-yellow-100 text-yellow-700' :
-                        'bg-blue-100 text-blue-700'
-                      }`}>
-                        {order.status}
-                      </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-yellow-800">Low Stock Alert</h3>
+                      <p className="mt-1 text-sm text-yellow-700">{stats.lowStockProducts} products are running low on stock</p>
                     </div>
                   </div>
-                ))
+                </div>
+              )}
+
+              {stats.pendingOrders > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                      <svg className="h-5 w-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-blue-800">Pending Orders</h3>
+                      <p className="mt-1 text-sm text-blue-700">{stats.pendingOrders} orders need attention</p>
+                    </div>
+                  </div>
+                </div>
               )}
             </div>
-          </div>
 
-          {/* Quick Actions */}
-          <div className="bg-white rounded-xl p-6">
-            <h2 className="text-xl font-semibold text-gray-700 mb-4">Quick Actions</h2>
-            <div className="space-y-3">
-              <Link href="/admin/orders" className="flex items-center p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-                  <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-                  </svg>
-                </div>
-                <div>
-                  <div className="font-medium">Manage Orders</div>
-                  <div className="text-sm text-gray-500">View and update order status</div>
-                </div>
-              </Link>
+            {/* Dijkstra Map */}
+            <DijkstraMap orders={mapOrders} farmLocation={farmAddress} />
 
-              <Link href="/admin/products" className="flex items-center p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                  </svg>
+            {/* Recent Orders, Low Stock & Quick Actions */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              {/* Recent Orders - Now Scrollable */}
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-700 mb-4">Recent Orders</h2>
+                <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                  {recentOrders.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">No recent orders</p>
+                  ) : (
+                    recentOrders.map((order) => (
+                      <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div>
+                          <p className="font-medium text-sm">{order.customerName}</p>
+                          <p className="text-xs text-gray-500">{order.product?.name || 'Unknown Product'} × {order.orderAmount}</p>
+                          <p className="text-xs text-gray-400">
+                            {new Date(order.orderDate).toLocaleDateString('id-ID')}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-sm">{formatCurrency(order.totalPrice)}</p>
+                          <span className={`inline-block px-2 py-1 text-xs rounded-full ${getStatusColor(order.status)}`}>
+                            {order.status}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
-                <div>
-                  <div className="font-medium">Manage Products</div>
-                  <div className="text-sm text-gray-500">Add or edit product listings</div>
-                </div>
-              </Link>
+              </div>
 
-              <Link href="/admin/employees" className="flex items-center p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                  </svg>
+              {/* Low Stock Products */}
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-700 mb-4">Low Stock Products</h2>
+                <div className="space-y-3">
+                  {lowStockProductsList.length === 0 ? (
+                    <p className="text-gray-500 text-center py-4">All products are well stocked</p>
+                  ) : (
+                    lowStockProductsList.map((product) => (
+                      <div key={product.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium text-sm">{product.name}</p>
+                          <p className="text-xs text-gray-500">{formatCurrency(product.harga)}</p>
+                        </div>
+                        <div className="text-right">
+                          <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                            product.stok === 0 ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800'
+                          }`}>
+                            {product.stok} left
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
-                <div>
-                  <div className="font-medium">Manage Employees</div>
-                  <div className="text-sm text-gray-500">View staff and payroll</div>
-                </div>
-              </Link>
+              </div>
 
-              <Link href="/admin/finances" className="flex items-center p-3 border border-gray-100 rounded-lg hover:bg-gray-50 transition-colors">
-                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
-                  <svg className="w-5 h-5 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-                  </svg>
+              {/* Quick Actions */}
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-700 mb-4">Quick Actions</h2>
+                <div className="space-y-3">
+                  <button 
+                    onClick={() => window.location.href = '/admin/orders'}
+                    className="w-full p-3 bg-blue-50 hover:bg-blue-100 rounded-lg text-left transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+                        <svg className="h-4 w-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm text-gray-800">View All Orders</p>
+                        <p className="text-xs text-gray-500">Manage customer orders</p>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => window.location.href = '/admin/products'}
+                    className="w-full p-3 bg-purple-50 hover:bg-purple-100 rounded-lg text-left transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
+                        <svg className="h-4 w-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm text-gray-800">Manage Products</p>
+                        <p className="text-xs text-gray-500">Add or update products</p>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => window.location.href = '/admin/finances'}
+                    className="w-full p-3 bg-green-50 hover:bg-green-100 rounded-lg text-left transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 bg-green-100 rounded-lg flex items-center justify-center mr-3">
+                        <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm text-gray-800">View Finances</p>
+                        <p className="text-xs text-gray-500">Track expenses & revenue</p>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => window.location.href = '/admin/employees'}
+                    className="w-full p-3 bg-orange-50 hover:bg-orange-100 rounded-lg text-left transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 bg-orange-100 rounded-lg flex items-center justify-center mr-3">
+                        <svg className="h-4 w-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5 0a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm text-gray-800">Manage Employees</p>
+                        <p className="text-xs text-gray-500">Employee records</p>
+                      </div>
+                    </div>
+                  </button>
+
+                  <button 
+                    onClick={() => setActiveTab('monthly')}
+                    className="w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-lg text-left transition-colors"
+                  >
+                    <div className="flex items-center">
+                      <div className="h-8 w-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3">
+                        <svg className="h-4 w-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm text-gray-800">Monthly Report</p>
+                        <p className="text-xs text-gray-500">Detailed summary</p>
+                      </div>
+                    </div>
+                  </button>
                 </div>
-                <div>
-                  <div className="font-medium">View Finances</div>
-                  <div className="text-sm text-gray-500">Detailed financial reports</div>
+              </div>
+
+            </div>
+          </>
+        )}
+
+        {/* Monthly Summary Tab */}
+        {activeTab === 'monthly' && (
+          <div className="space-y-6">
+            {/* Monthly Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <div className="text-center">
+                  <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                    </svg>
+                  </div>
+                  <p className="text-2xl font-bold text-green-600">{formatCurrency(stats.totalRevenue)}</p>
+                  <p className="text-sm text-gray-600">Total Revenue</p>
+                  <p className="text-xs text-gray-500 mt-1">From {stats.totalOrders} orders</p>
                 </div>
-              </Link>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <div className="text-center">
+                  <div className="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <svg className="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                  </div>
+                  <p className="text-2xl font-bold text-red-600">{formatCurrency(monthlyExpenses + monthlyEmployeeCosts)}</p>
+                  <p className="text-sm text-gray-600">Total Expenses</p>
+                  <p className="text-xs text-gray-500 mt-1">Operations + Salaries</p>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <div className="text-center">
+                  <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
+                    <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                  </div>
+                  <p className={`text-2xl font-bold ${stats.totalRevenue - (monthlyExpenses + monthlyEmployeeCosts) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
+                    {formatCurrency(stats.totalRevenue - (monthlyExpenses + monthlyEmployeeCosts))}
+                  </p>
+                  <p className="text-sm text-gray-600">Net Profit</p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {((stats.totalRevenue - (monthlyExpenses + monthlyEmployeeCosts)) / stats.totalRevenue * 100).toFixed(1)}% margin
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Expense Breakdown */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Expense Breakdown</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm font-medium text-gray-700">Employee Salaries</span>
+                    <span className="text-sm font-semibold text-gray-800">{formatCurrency(monthlyEmployeeCosts)}</span>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm font-medium text-gray-700">Operations</span>
+                    <span className="text-sm font-semibold text-gray-800">{formatCurrency(monthlyExpenses)}</span>
+                  </div>
+                  <div className="border-t pt-3">
+                    <div className="flex justify-between items-center font-semibold">
+                      <span className="text-gray-700">Total Expenses</span>
+                      <span className="text-gray-800">{formatCurrency(monthlyExpenses + monthlyEmployeeCosts)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-700 mb-4">Recent Expenses</h3>
+                <div className="space-y-3 max-h-64 overflow-y-auto">
+                  {extraCosts.slice(0, 10).map((cost) => (
+                    <div key={cost.id} className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="text-sm font-medium text-gray-700">{cost.name}</p>
+                        <p className="text-xs text-gray-500">{cost.category}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-gray-800">{formatCurrency(cost.amount)}</p>
+                        <p className="text-xs text-gray-500">{new Date(cost.date).toLocaleDateString('id-ID')}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Performance Summary */}
-        <div className="bg-white rounded-xl p-6">
-          <h2 className="text-xl font-semibold text-gray-700 mb-4">Monthly Performance</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-green-600">{formatCurrency(dashboardData.summary.totalRevenue)}</div>
-              <div className="text-sm text-gray-500">Total Revenue This Month</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-bold text-blue-600">{dashboardData.summary.totalOrders}</div>
-              <div className="text-sm text-gray-500">Orders Processed</div>
-            </div>
-            <div className="text-center">
-              <div className={`text-2xl font-bold ${profitColor}`}>{formatCurrency(dashboardData.summary.netProfit)}</div>
-              <div className="text-sm text-gray-500">Net Profit</div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

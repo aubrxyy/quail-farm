@@ -1,107 +1,176 @@
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { generateSlug } from '@/lib/utils';
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
 
 const createProductSchema = z.object({
-  name: z.string().min(1, "Product name is required"),
-  slug: z.string().optional(),
+  name: z.string().min(1),
   gambar: z.string().optional().default(''),
-  harga: z.number().positive("Price must be positive"),
   deskripsi: z.string().optional().default(''),
-  stok: z.number().min(0, "stok cannot be negative"),
+  harga: z.number().positive(),
+  stok: z.number().int().min(0),
 });
 
 export async function GET(request: Request) {
   try {
-    console.log('🔍 Fetching products...');
-    
     const { searchParams } = new URL(request.url);
-    const search = searchParams.get('search');
-
-    let whereClause = {};
+    const stockFilter = searchParams.get('stok');
     
-    if (search) {
-      whereClause = {
-        OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { deskripsi: { contains: search, mode: 'insensitive' } },
-        ],
-      };
+    if (stockFilter === 'low') {
+      const lowStockThreshold = parseInt(process.env.LOW_STOCK_THRESHOLD || '20');
+      
+      const products = await prisma.product.findMany({
+        where: {
+          stok: {
+            lte: lowStockThreshold
+          }
+        },
+        orderBy: {
+          stok: 'asc'
+        }
+      });
+      
+      return NextResponse.json(products);
     }
-
-    const products = await prisma.product.findMany({
-      where: whereClause,
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
-
-    console.log(`✅ Found ${products.length} products`);
+    
+    const products = await prisma.product.findMany();
     return NextResponse.json(products);
   } catch (error) {
-    console.error('❌ Error fetching products:', error);
-    return NextResponse.json({ 
-      error: 'Failed to fetch products',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch products' }, { status: 500 });
   }
 }
 
-export async function POST(request: Request) {
+async function saveImage(imageFile: File): Promise<string> {
+  // Create uploads directory
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+  await mkdir(uploadDir, { recursive: true });
+
+  // Generate unique filename
+  const timestamp = Date.now();
+  const extension = path.extname(imageFile.name);
+  const filename = `${timestamp}${extension}`;
+  const filepath = path.join(uploadDir, filename);
+
+  // Save file
+  const bytes = await imageFile.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  await writeFile(filepath, buffer);
+
+  // Return public URL
+  return `/uploads/${filename}`;
+}
+
+export async function POST(request: NextRequest) {
   try {
-    console.log('🔍 Creating new product...');
-    
+    // Parse form data (multipart)
     const formData = await request.formData();
     
-    // Handle the image file properly - just get the name for now
-    const imageFile = formData.get('gambar') as File;
+    // Get form fields
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const price = Number(formData.get('price'));
+    const stock = Number(formData.get('stock'));
+    const imageFile = formData.get('image') as File | null;
+
+    // Handle image upload
     let imagePath = '';
-    
     if (imageFile && imageFile.size > 0) {
-      // For now, just use the filename. You can implement proper file upload later
-      imagePath = `/images/${imageFile.name}`;
-      console.log('📸 Image file received:', imageFile.name, 'Size:', imageFile.size);
+      imagePath = await saveImage(imageFile);
     }
-    
+
+    // Validate data
     const productData = {
-      name: formData.get('name') as string,
-      slug: formData.get('slug') as string || '',
+      name,
       gambar: imagePath,
-      harga: Number(formData.get('harga')),
-      deskripsi: formData.get('deskripsi') as string || '',
-      stok: Number(formData.get('stok')), // Form field is 'stok' but database is 'stok'
+      deskripsi: description || '',
+      harga: price,
+      stok: stock,
     };
 
-    console.log('📝 Product data:', productData);
-    
     const parsed = createProductSchema.safeParse(productData);
-    
     if (!parsed.success) {
-      console.log('❌ Validation errors:', parsed.error.issues);
-      return NextResponse.json({ 
-        error: 'Validation failed', 
-        details: parsed.error.issues 
-      }, { status: 400 });
+      return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
     }
+
+    // Generate slug
+    const slug = generateSlug(parsed.data.name);
     
-    const product = await prisma.product.create({
-      data: {
-        name: parsed.data.name,
-        slug: parsed.data.slug || null,
-        gambar: parsed.data.gambar,
-        harga: parsed.data.harga,
-        deskripsi: parsed.data.deskripsi,
-        stok: parsed.data.stok,
-      }
+    // Check if slug exists
+    const existingProduct = await prisma.product.findFirst({
+      where: { slug }
     });
     
-    console.log('✅ Created product:', product);
+    if (existingProduct) {
+      return NextResponse.json({ error: 'A product with this name already exists' }, { status: 400 });
+    }
+
+    // Create product
+    const product = await prisma.product.create({
+      data: {
+        ...parsed.data,
+        slug
+      }
+    });
+
     return NextResponse.json(product, { status: 201 });
   } catch (error) {
-    console.error('❌ Error creating product:', error);
-    return NextResponse.json({ 
-      error: 'Failed to create product',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('Error creating product:', error);
+    return NextResponse.json({ error: 'Failed to create product' }, { status: 500 });
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    // Parse form data
+    const formData = await request.formData();
+    
+    // Get product ID (for updates)
+    const id = formData.get('id');
+    
+    if (!id) {
+      // No ID = create new product (same as POST)
+      return POST(request);
+    }
+
+    // Get form fields
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const price = Number(formData.get('price'));
+    const stock = Number(formData.get('stock'));
+    const imageFile = formData.get('image') as File | null;
+
+    // Get existing product
+    const existingProduct = await prisma.product.findUnique({
+      where: { id: Number(id) }
+    });
+
+    if (!existingProduct) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+
+    // Handle image upload
+    let imagePath = existingProduct.gambar; // Keep existing image by default
+    if (imageFile && imageFile.size > 0) {
+      imagePath = await saveImage(imageFile);
+    }
+
+    // Update product
+    const product = await prisma.product.update({
+      where: { id: Number(id) },
+      data: {
+        name: name || existingProduct.name,
+        gambar: imagePath,
+        deskripsi: description || existingProduct.deskripsi,
+        harga: price || existingProduct.harga,
+        stok: stock !== undefined ? stock : existingProduct.stok,
+      }
+    });
+
+    return NextResponse.json(product);
+  } catch (error) {
+    console.error('Error updating product:', error);
+    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
   }
 }

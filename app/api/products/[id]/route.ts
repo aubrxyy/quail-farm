@@ -1,146 +1,107 @@
+import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
+import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
 
-const updateProductSchema = z.object({
-  name: z.string().min(1, "Product name is required"),
-  slug: z.string().optional(),
-  gambar: z.string().optional().default(''),
-  harga: z.number().positive("Price must be positive"),
-  deskripsi: z.string().optional().default(''),
-  stok: z.number().min(0, "stok cannot be negative"),
-});
+async function saveImage(imageFile: File): Promise<string> {
+  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+  await mkdir(uploadDir, { recursive: true });
 
-interface RouteParams {
-  params: Promise<{ id: string }>;
+  const timestamp = Date.now();
+  const extension = path.extname(imageFile.name);
+  const filename = `${timestamp}${extension}`;
+  const filepath = path.join(uploadDir, filename);
+
+  const bytes = await imageFile.arrayBuffer();
+  const buffer = Buffer.from(bytes);
+  await writeFile(filepath, buffer);
+
+  return `/uploads/${filename}`;
 }
 
-export async function GET(request: Request, { params }: RouteParams) {
+export async function GET(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
-    const resolvedParams = await params;
-    const productId = parseInt(resolvedParams.id);
-    
-    if (isNaN(productId)) {
-      return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
-    }
-
-    console.log('🔍 Fetching product:', productId);
+    const { id } = await context.params;
+    const productId = parseInt(id);
 
     const product = await prisma.product.findUnique({
-      where: { id: productId },
+      where: { id: productId }
     });
 
     if (!product) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
 
-    console.log('✅ Product found:', product.name);
     return NextResponse.json(product);
   } catch (error) {
-    console.error('❌ Error fetching product:', error);
     return NextResponse.json({ error: 'Failed to fetch product' }, { status: 500 });
   }
 }
 
-export async function PUT(request: Request, { params }: RouteParams) {
+export async function PUT(
+  request: NextRequest,
+  context: { params: { id: string } }
+) {
   try {
-    const resolvedParams = await params;
-    const productId = parseInt(resolvedParams.id);
-    
-    if (isNaN(productId)) {
-      return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
-    }
+    const { id } = await context.params;
+    const productId = parseInt(id);
 
-    console.log('🔍 Updating product:', productId);
-
+    // Parse form data
     const formData = await request.formData();
     
-    // Handle the image file properly
-    const imageFile = formData.get('gambar') as File;
-    const currentImage = formData.get('currentImage') as string;
-    
-    let imagePath = currentImage || ''; // Keep current image by default
-    
-    if (imageFile && imageFile.size > 0) {
-      // New image uploaded - just use filename for now
-      imagePath = `/images/${imageFile.name}`;
-      console.log('📸 New image file received:', imageFile.name, 'Size:', imageFile.size);
-    }
-    
-    const productData = {
-      name: formData.get('name') as string,
-      slug: formData.get('slug') as string || '',
-      gambar: imagePath,
-      harga: Number(formData.get('harga')),
-      deskripsi: formData.get('deskripsi') as string || '',
-      stok: Number(formData.get('stok')),
-    };
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+    const price = Number(formData.get('price'));
+    const stock = Number(formData.get('stock'));
+    const imageFile = formData.get('image') as File | null;
 
-    console.log('📝 Updating product with data:', productData);
-
-    const parsed = updateProductSchema.safeParse(productData);
-    
-    if (!parsed.success) {
-      console.log('❌ Validation errors:', parsed.error.issues);
-      return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
-    }
-    
-    // Check if product exists
+    // Get existing product
     const existingProduct = await prisma.product.findUnique({
-      where: { id: productId },
+      where: { id: productId }
     });
 
     if (!existingProduct) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 });
     }
-    
+
+    // Handle image upload
+    let imagePath = existingProduct.gambar;
+    if (imageFile && imageFile.size > 0) {
+      imagePath = await saveImage(imageFile);
+    }
+
+    // Update product
     const product = await prisma.product.update({
       where: { id: productId },
       data: {
-        name: parsed.data.name,
-        slug: parsed.data.slug || null,
-        gambar: parsed.data.gambar,
-        harga: parsed.data.harga,
-        deskripsi: parsed.data.deskripsi,
-        stok: parsed.data.stok,
+        name: name || existingProduct.name,
+        gambar: imagePath,
+        deskripsi: description || existingProduct.deskripsi,
+        harga: price || existingProduct.harga,
+        stok: stock !== undefined ? stock : existingProduct.stok,
       }
     });
-    
-    console.log('✅ Updated product:', product);
+
     return NextResponse.json(product);
   } catch (error) {
-    console.error('❌ Error updating product:', error);
     return NextResponse.json({ error: 'Failed to update product' }, { status: 500 });
   }
 }
 
-export async function DELETE(request: Request, { params }: RouteParams) {
+export async function DELETE(
+  request: Request,
+  context: { params: { id: string } }
+) {
   try {
-    const resolvedParams = await params;
-    const productId = parseInt(resolvedParams.id);
-    
-    if (isNaN(productId)) {
-      return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
-    }
+    const { id } = await context.params;
+    const productId = parseInt(id);
 
-    console.log('🗑️ Deleting product:', productId);
-
-    const existingProduct = await prisma.product.findUnique({
-      where: { id: productId },
-    });
-
-    if (!existingProduct) {
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-    }
-
-    await prisma.product.delete({
-      where: { id: productId },
-    });
-    
-    console.log('✅ Product deleted successfully');
+    await prisma.product.delete({ where: { id: productId } });
     return NextResponse.json({ message: 'Product deleted successfully' });
   } catch (error) {
-    console.error('❌ Error deleting product:', error);
     return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
   }
 }
