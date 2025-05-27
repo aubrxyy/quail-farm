@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import OrderMap from '@/app/_components/OrderMap';
+import { useEffect, useState } from 'react';
 
 interface Product {
   id: number;
@@ -44,14 +44,6 @@ interface ExtraCost {
   date: string;
 }
 
-interface Employee {
-  id: number;
-  name: string;
-  position: string;
-  salary: number;
-  status: string;
-}
-
 interface DashboardStats {
   totalRevenue: number;
   totalOrders: number;
@@ -65,7 +57,6 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [extraCosts, setExtraCosts] = useState<ExtraCost[]>([]);
-  const [employees, setEmployees] = useState<Employee[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalRevenue: 0,
     totalOrders: 0,
@@ -94,11 +85,10 @@ export default function DashboardPage() {
       setLoading(true);
       
       // Fetch all data in parallel
-      const [ordersRes, productsRes, extraCostsRes, employeesRes] = await Promise.all([
+      const [ordersRes, productsRes, extraCostsRes] = await Promise.all([
         fetch('/api/orders'),
         fetch('/api/products'),
         fetch('/api/extra-costs'),
-        fetch('/api/employees')
       ]);
 
       if (ordersRes.ok) {
@@ -122,12 +112,6 @@ export default function DashboardPage() {
         console.error('Extra costs fetch failed:', extraCostsRes.status);
       }
 
-      if (employeesRes.ok) {
-        const employeesData = await employeesRes.json();
-        setEmployees(employeesData);
-      } else {
-        console.error('Employees fetch failed:', employeesRes.status);
-      }
 
     } catch (err) {
       setError('Failed to fetch dashboard data');
@@ -197,11 +181,6 @@ export default function DashboardPage() {
       return costDate.getMonth() === currentMonth && costDate.getFullYear() === currentYear;
     })
     .reduce((sum, cost) => sum + cost.amount, 0);
-
-  // Calculate employee expenses
-  const monthlyEmployeeCosts = employees
-    .filter(emp => emp.status === 'Active')
-    .reduce((sum, emp) => sum + emp.salary, 0);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('id-ID', {
@@ -563,7 +542,6 @@ export default function DashboardPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
                     </svg>
                   </div>
-                  <p className="text-2xl font-bold text-red-600">{formatCurrency(monthlyExpenses + monthlyEmployeeCosts)}</p>
                   <p className="text-sm text-gray-600">Total Expenses</p>
                   <p className="text-xs text-gray-500 mt-1">Operations + Salaries</p>
                 </div>
@@ -576,13 +554,7 @@ export default function DashboardPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                     </svg>
                   </div>
-                  <p className={`text-2xl font-bold ${stats.totalRevenue - (monthlyExpenses + monthlyEmployeeCosts) >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                    {formatCurrency(stats.totalRevenue - (monthlyExpenses + monthlyEmployeeCosts))}
-                  </p>
                   <p className="text-sm text-gray-600">Net Profit</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {((stats.totalRevenue - (monthlyExpenses + monthlyEmployeeCosts)) / stats.totalRevenue * 100).toFixed(1)}% margin
-                  </p>
                 </div>
               </div>
             </div>
@@ -594,7 +566,6 @@ export default function DashboardPage() {
                 <div className="space-y-3">
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                     <span className="text-sm font-medium text-gray-700">Employee Salaries</span>
-                    <span className="text-sm font-semibold text-gray-800">{formatCurrency(monthlyEmployeeCosts)}</span>
                   </div>
                   <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                     <span className="text-sm font-medium text-gray-700">Operations</span>
@@ -603,7 +574,6 @@ export default function DashboardPage() {
                   <div className="border-t pt-3">
                     <div className="flex justify-between items-center font-semibold">
                       <span className="text-gray-700">Total Expenses</span>
-                      <span className="text-gray-800">{formatCurrency(monthlyExpenses + monthlyEmployeeCosts)}</span>
                     </div>
                   </div>
                 </div>
