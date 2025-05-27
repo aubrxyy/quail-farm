@@ -1,19 +1,20 @@
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { z } from 'zod';
 import { decrypt } from '@/lib/session';
 import { cookies } from 'next/headers';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 
 // Define schema for address creation
 const createAddressSchema = z.object({
-  label: z.string().min(1, 'Label is required'),
-  address: z.string().min(1, 'Address is required'),
+  label: z.string().optional(),
+  address: z.string().min(1, 'Address is required').optional(),
+  city: z.string().min(1, 'City is required').optional(),
+  district: z.string().min(1, 'District is required').optional(),
+  province: z.string().min(1, 'Province is required').optional(),
+  country: z.string().min(1, 'Country is required').optional(),
+  postalCode: z.string().min(1, 'Postal code is required').optional(),
   latitude: z.number().optional(),
   longitude: z.number().optional(),
-  city: z.string().min(1, 'City is required'),
-  district: z.string().min(1, 'District is required'),
-  postalCode: z.string().min(1, 'Postal code is required'),
-  country: z.string().min(1, 'Country is required'),
 });
 
 // Get all addresses for the authenticated user

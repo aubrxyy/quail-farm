@@ -6,10 +6,15 @@ import { z } from 'zod';
 
 // Define schema for address updates
 const updateAddressSchema = z.object({
-  street: z.string().min(1, 'Street is required').optional(),
+  label: z.string().optional(),
+  address: z.string().min(1, 'Address is required').optional(),
   city: z.string().min(1, 'City is required').optional(),
+  district: z.string().min(1, 'District is required').optional(),
   province: z.string().min(1, 'Province is required').optional(),
+  country: z.string().min(1, 'Country is required').optional(),
   postalCode: z.string().min(1, 'Postal code is required').optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
 
 // Get a specific address
@@ -65,9 +70,14 @@ export async function PUT(
 
     const addressId = parseInt(context.params.id);
     const body = await req.json();
+    
+    // Log the incoming data for debugging
+    console.log('Received data:', body);
+    
     const parsed = updateAddressSchema.safeParse(body);
 
     if (!parsed.success) {
+      console.log('Validation errors:', parsed.error.issues);
       return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
     }
 
@@ -83,10 +93,17 @@ export async function PUT(
       return NextResponse.json({ error: 'Address not found' }, { status: 404 });
     }
 
+    // Filter out undefined values
+    const updateData = Object.fromEntries(
+      Object.entries(parsed.data).filter(([_, value]) => value !== undefined)
+    );
+
+    console.log('Update data:', updateData);
+
     // Update the address
     const address = await prisma.address.update({
       where: { id: addressId },
-      data: parsed.data,
+      data: updateData,
     });
 
     return NextResponse.json(address);
