@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { DijkstraPathfinder } from '@/lib/dijkstra';
 
 interface Order {
   id: string;
@@ -63,66 +64,70 @@ function DijkstraMapComponent({ orders, farmLocation }: DijkstraMapProps) {
     loadLeaflet();
   }, []);
 
-  // Calculate distance between two points (Haversine formula)
-  const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2: number): number => {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-      Math.sin(dLng/2) * Math.sin(dLng/2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  };
-
-  // Calculate optimal route using nearest neighbor
+  // Calculate optimal route using DijkstraPathfinder
   const calculateOptimalRoute = () => {
     if (selectedOrders.length === 0 || !L || !mapRef.current) return;
-    const orderNodes = selectedOrders.map(orderId => {
-      const order = orders.find(o => o.id === orderId)!;
-      return {
-        id: orderId,
-        lat: order.lat,
-        lng: order.lng,
-        name: order.customerName,
-      };
-    });
+
+    const dijkstra = new DijkstraPathfinder();
     let currentLocation = { lat: farmLocation.lat, lng: farmLocation.lng };
     let totalDist = 0;
-    const routePath: [number, number][] = [[farmLocation.lat, farmLocation.lng]];
-    const unvisited = [...orderNodes];
-    while (unvisited.length > 0) {
-      let nearestNode: any = null;
-      let nearestDistance = Infinity;
-      let nearestIndex = -1;
-      unvisited.forEach((node, index) => {
-        const dist = calculateDistance(
-          currentLocation.lat, currentLocation.lng,
-          node.lat, node.lng
-        );
-        if (dist < nearestDistance) {
-          nearestDistance = dist;
-          nearestNode = node;
-          nearestIndex = index;
+    let routePath: [number, number][] = [[farmLocation.lat, farmLocation.lng]];
+
+    // Visit each selected order in the order selected (can be improved to TSP)
+    selectedOrders.forEach(orderId => {
+      const order = orders.find(o => o.id === orderId);
+      if (!order) return;
+
+      // Find shortest path from current location to order using Dijkstra
+      const result = dijkstra.findShortestPath(
+        currentLocation.lat,
+        currentLocation.lng,
+        order.lat,
+        order.lng
+      );
+
+      // Add waypoints to routePath (skip the first if it's the same as last)
+      result.waypoints.forEach((node, idx) => {
+        if (
+          idx === 0 &&
+          routePath.length > 0 &&
+          routePath[routePath.length - 1][0] === node.lat &&
+          routePath[routePath.length - 1][1] === node.lng
+        ) {
+          return;
         }
+        routePath.push([node.lat, node.lng]);
       });
-      if (nearestNode && nearestIndex !== -1) {
-        routePath.push([nearestNode.lat, nearestNode.lng]);
-        totalDist += nearestDistance;
-        currentLocation = { lat: nearestNode.lat, lng: nearestNode.lng };
-        unvisited.splice(nearestIndex, 1);
-      } else {
-        break;
-      }
-    }
+
+      // Add the final destination (customer)
+      routePath.push([order.lat, order.lng]);
+      totalDist += result.distance;
+      currentLocation = { lat: order.lat, lng: order.lng };
+    });
+
     // Return to farm
-    const returnDistance = calculateDistance(
-      currentLocation.lat, currentLocation.lng,
-      farmLocation.lat, farmLocation.lng
+    const returnResult = dijkstra.findShortestPath(
+      currentLocation.lat,
+      currentLocation.lng,
+      farmLocation.lat,
+      farmLocation.lng
     );
+    returnResult.waypoints.forEach((node, idx) => {
+      if (
+        idx === 0 &&
+        routePath.length > 0 &&
+        routePath[routePath.length - 1][0] === node.lat &&
+        routePath[routePath.length - 1][1] === node.lng
+      ) {
+        return;
+      }
+      routePath.push([node.lat, node.lng]);
+    });
     routePath.push([farmLocation.lat, farmLocation.lng]);
-    totalDist += returnDistance;
+    totalDist += returnResult.distance;
+
     setTotalDistance(totalDist);
+
     // Draw route on map
     if (routePolyline) {
       mapRef.current.removeLayer(routePolyline);

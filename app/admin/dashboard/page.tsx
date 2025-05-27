@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import DijkstraMap from '@/app/_components/DijkstraMap';
+import OrderMap from '@/app/_components/OrderMap';
 
 interface Product {
   id: number;
@@ -22,6 +22,11 @@ interface Order {
   totalPrice: number;
   status: string;
   product: Product;
+  address?: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
   user?: {
     addresses?: Array<{
       latitude: number;
@@ -73,12 +78,12 @@ export default function DashboardPage() {
   const [error, setError] = useState('');
   const [activeTab, setActiveTab] = useState<'overview' | 'monthly'>('overview');
 
-  // Farm address (you can make this configurable later)
+  // Farm address
   const farmAddress = {
     lat: -6.605898920570076,
     lng: 106.8517554378589,
     address: 'Kp. Cibitung, Nagrak, Kec. Sukaraja, Kabupaten Bogor, Jawa Barat 16151'
-};
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -156,25 +161,22 @@ export default function DashboardPage() {
     }
   }, [orders, products]);
 
-  // Transform orders for map component with proper null checks
-  const mapOrders = orders.map(order => {
-    // Get coordinates with fallback to farm location
-    const userAddress = order.user?.addresses?.[0];
-    const lat = userAddress?.latitude || farmAddress.lat;
-    const lng = userAddress?.longitude || farmAddress.lng;
-    
-    return {
+  // Transform orders for the new OrderMap component
+  const transformedOrders = orders
+    .filter(order => order.address?.latitude && order.address?.longitude) // Only orders with valid addresses
+    .map(order => ({
       id: order.id.toString(),
       customerName: order.customerName,
       customerAddress: order.customerAddress,
-      lat,
-      lng,
+      address: {
+        latitude: order.address!.latitude,
+        longitude: order.address!.longitude,
+      },
       status: order.status,
       product: { name: order.product?.name || 'Unknown Product' },
       totalPrice: order.totalPrice,
-      orderAmount: order.orderAmount
-    };
-  });
+      orderAmount: order.orderAmount,
+    }));
 
   // Get recent orders (last 15 for scrolling)
   const recentOrders = orders
@@ -381,8 +383,8 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* Dijkstra Map */}
-            <DijkstraMap orders={mapOrders} farmLocation={farmAddress} />
+            {/* NEW: Real Road Routing Map */}
+            <OrderMap orders={transformedOrders} farmLocation={farmAddress} />
 
             {/* Recent Orders, Low Stock & Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

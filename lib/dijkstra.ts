@@ -1,266 +1,179 @@
 interface Node {
   id: string;
+  name: string;
   lat: number;
   lng: number;
-  name?: string;
 }
 
 interface Edge {
   from: string;
   to: string;
-  weight: number; // distance in km or travel time in minutes
-  type?: 'highway' | 'main_road' | 'local_road';
-}
-
-interface Graph {
-  nodes: Map<string, Node>;
-  edges: Map<string, Edge[]>;
+  distance: number;
 }
 
 class DijkstraPathfinder {
-  private graph: Graph;
+  private nodes: Node[] = [
+    // Original nodes
+    { id: 'jakarta', name: 'Jakarta', lat: -6.2088, lng: 106.8456 },
+    { id: 'bogor', name: 'Bogor', lat: -6.5971, lng: 106.8060 },
+    { id: 'depok', name: 'Depok', lat: -6.4025, lng: 106.7942 },
+    { id: 'bekasi', name: 'Bekasi', lat: -6.2383, lng: 106.9756 },
+    { id: 'tangerang', name: 'Tangerang', lat: -6.1783, lng: 106.6319 },
+    
+    // NEW NODES around your area for better routing
+    { id: 'sukaraja', name: 'Sukaraja', lat: -6.605898, lng: 106.851755 }, // Near your farm
+    { id: 'cibubur', name: 'Cibubur', lat: -6.365, lng: 106.899 },
+    { id: 'sentul', name: 'Sentul', lat: -6.565, lng: 106.835 },
+    { id: 'citeureup', name: 'Citeureup', lat: -6.485, lng: 106.815 },
+    { id: 'cileungsi', name: 'Cileungsi', lat: -6.395, lng: 106.961 },
+    { id: 'gunung_putri', name: 'Gunung Putri', lat: -6.425, lng: 106.885 },
+    { id: 'parung', name: 'Parung', lat: -6.421, lng: 106.733 },
+    { id: 'ciawi', name: 'Ciawi', lat: -6.644, lng: 106.854 },
+    { id: 'leuwiliang', name: 'Leuwiliang', lat: -6.549, lng: 106.677 },
+  ];
 
-  constructor() {
-    this.graph = {
-      nodes: new Map(),
-      edges: new Map()
-    };
-    this.initializeJakartaGraph();
-  }
+  private edges: Edge[] = [
+    // Original edges
+    { from: 'jakarta', to: 'bogor', distance: 54 },
+    { from: 'jakarta', to: 'depok', distance: 20 },
+    { from: 'jakarta', to: 'bekasi', distance: 23 },
+    { from: 'jakarta', to: 'tangerang', distance: 25 },
+    { from: 'depok', to: 'bogor', distance: 35 },
+    { from: 'bekasi', to: 'depok', distance: 30 },
+    
+    // NEW EDGES connecting your local area
+    { from: 'bogor', to: 'sukaraja', distance: 8 },
+    { from: 'bogor', to: 'ciawi', distance: 12 },
+    { from: 'bogor', to: 'parung', distance: 25 },
+    { from: 'bogor', to: 'sentul', distance: 18 },
+    { from: 'depok', to: 'cibubur', distance: 15 },
+    { from: 'depok', to: 'gunung_putri', distance: 20 },
+    { from: 'bekasi', to: 'cileungsi', distance: 15 },
+    { from: 'bekasi', to: 'gunung_putri', distance: 25 },
+    { from: 'cibubur', to: 'gunung_putri', distance: 12 },
+    { from: 'cibubur', to: 'sentul', distance: 22 },
+    { from: 'sentul', to: 'citeureup', distance: 15 },
+    { from: 'sentul', to: 'sukaraja', distance: 10 },
+    { from: 'citeureup', to: 'sukaraja', distance: 18 },
+    { from: 'gunung_putri', to: 'cileungsi', distance: 18 },
+    { from: 'sukaraja', to: 'ciawi', distance: 8 },
+    { from: 'parung', to: 'leuwiliang', distance: 20 },
+    { from: 'leuwiliang', to: 'ciawi', distance: 25 },
+  ];
 
-  // Initialize with basic Jakarta road network (simplified)
-  private initializeJakartaGraph() {
-    // Major nodes in Jakarta area (you can expand this)
-    const nodes: Node[] = [
-      // Quail Farm location
-      { id: 'farm', lat: -6.6059722, lng: 106.8518056, name: 'Quail Farm' },
-      
-      // Major Jakarta locations
-      { id: 'monas', lat: -6.1751, lng: 106.8272, name: 'Monas' },
-      { id: 'senayan', lat: -6.2297, lng: 106.8019, name: 'Senayan' },
-      { id: 'kemayoran', lat: -6.1669, lng: 106.8492, name: 'Kemayoran' },
-      { id: 'cikini', lat: -6.1958, lng: 106.8414, name: 'Cikini' },
-      { id: 'manggarai', lat: -6.2103, lng: 106.8494, name: 'Manggarai' },
-      { id: 'kuningan', lat: -6.2383, lng: 106.8317, name: 'Kuningan' },
-      { id: 'blok_m', lat: -6.2442, lng: 106.7978, name: 'Blok M' },
-      { id: 'pondok_indah', lat: -6.2661, lng: 106.7831, name: 'Pondok Indah' },
-      { id: 'fatmawati', lat: -6.2925, lng: 106.7994, name: 'Fatmawati' },
-      { id: 'depok', lat: -6.4025, lng: 106.7942, name: 'Depok' },
-      { id: 'bekasi', lat: -6.2383, lng: 106.9756, name: 'Bekasi' },
-      { id: 'tangerang', lat: -6.1783, lng: 106.6319, name: 'Tangerang' },
-      { id: 'bogor', lat: -6.5944, lng: 106.7889, name: 'Bogor' },
-    ];
-
-    // Add nodes to graph
-    nodes.forEach(node => {
-      this.graph.nodes.set(node.id, node);
-      this.graph.edges.set(node.id, []);
-    });
-
-    // Define major routes (simplified road network)
-    const edges: Edge[] = [
-      // From farm to major highways
-      { from: 'farm', to: 'bogor', weight: 15, type: 'main_road' },
-      { from: 'farm', to: 'depok', weight: 25, type: 'main_road' },
-      
-      // Major highway connections
-      { from: 'bogor', to: 'depok', weight: 20, type: 'highway' },
-      { from: 'depok', to: 'fatmawati', weight: 15, type: 'highway' },
-      { from: 'fatmawati', to: 'blok_m', weight: 8, type: 'main_road' },
-      { from: 'fatmawati', to: 'pondok_indah', weight: 10, type: 'main_road' },
-      { from: 'blok_m', to: 'senayan', weight: 12, type: 'main_road' },
-      { from: 'pondok_indah', to: 'kuningan', weight: 15, type: 'main_road' },
-      { from: 'senayan', to: 'kuningan', weight: 8, type: 'main_road' },
-      { from: 'kuningan', to: 'cikini', weight: 10, type: 'main_road' },
-      { from: 'cikini', to: 'monas', weight: 8, type: 'main_road' },
-      { from: 'cikini', to: 'manggarai', weight: 6, type: 'main_road' },
-      { from: 'monas', to: 'kemayoran', weight: 10, type: 'main_road' },
-      { from: 'kemayoran', to: 'bekasi', weight: 25, type: 'highway' },
-      { from: 'monas', to: 'tangerang', weight: 30, type: 'highway' },
-    ];
-
-    // Add bidirectional edges
-    edges.forEach(edge => {
-      this.addEdge(edge.from, edge.to, edge.weight, edge.type);
-      this.addEdge(edge.to, edge.from, edge.weight, edge.type); // Bidirectional
-    });
-  }
-
-  private addEdge(from: string, to: string, weight: number, type?: 'highway' | 'main_road' | 'local_road') {
-    const edges = this.graph.edges.get(from) || [];
-    edges.push({ from, to, weight, type });
-    this.graph.edges.set(from, edges);
-  }
-
-  // Calculate distance between two coordinates using Haversine formula
+  // Calculate distance between two points (Haversine formula)
   private calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
     const R = 6371; // Earth's radius in km
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLng = (lng2 - lng1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-              Math.sin(dLng/2) * Math.sin(dLng/2);
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLng/2) * Math.sin(dLng/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
   }
 
-  // Find nearest node to given coordinates
-  private findNearestNode(lat: number, lng: number): string {
-    let nearestNode = '';
-    let minDistance = Infinity;
+  // Find the nearest node to given coordinates
+  private findNearestNode(lat: number, lng: number): Node {
+    let nearestNode = this.nodes[0];
+    let shortestDistance = this.calculateDistance(lat, lng, nearestNode.lat, nearestNode.lng);
 
-    this.graph.nodes.forEach((node, id) => {
-      if (id === 'farm') return; // Skip farm node
+    for (const node of this.nodes) {
       const distance = this.calculateDistance(lat, lng, node.lat, node.lng);
-      if (distance < minDistance) {
-        minDistance = distance;
-        nearestNode = id;
+      if (distance < shortestDistance) {
+        shortestDistance = distance;
+        nearestNode = node;
       }
-    });
+    }
 
     return nearestNode;
   }
 
   // Dijkstra's algorithm implementation
-  public findShortestPath(startLat: number, startLng: number, endLat: number, endLng: number) {
-    const start = 'farm';
-    const end = this.findNearestNode(endLat, endLng);
+  findShortestPath(startLat: number, startLng: number, endLat: number, endLng: number): { 
+    distance: number; 
+    waypoints: Node[] 
+  } {
+    const startNode = this.findNearestNode(startLat, startLng);
+    const endNode = this.findNearestNode(endLat, endLng);
 
-    if (!end) {
-      throw new Error('No suitable destination node found');
+    if (startNode.id === endNode.id) {
+      return {
+        distance: this.calculateDistance(startLat, startLng, endLat, endLng),
+        waypoints: [startNode]
+      };
     }
 
-    // Initialize distances and previous nodes
-    const distances = new Map<string, number>();
-    const previous = new Map<string, string | null>();
-    const visited = new Set<string>();
-    const queue = new Set<string>();
-
-    // Initialize all distances to infinity
-    this.graph.nodes.forEach((_, nodeId) => {
-      distances.set(nodeId, Infinity);
-      previous.set(nodeId, null);
-      queue.add(nodeId);
+    // Build adjacency list
+    const graph: { [key: string]: { node: string; distance: number }[] } = {};
+    this.nodes.forEach(node => {
+      graph[node.id] = [];
     });
 
-    // Distance from start to start is 0
-    distances.set(start, 0);
+    this.edges.forEach(edge => {
+      graph[edge.from].push({ node: edge.to, distance: edge.distance });
+      graph[edge.to].push({ node: edge.from, distance: edge.distance });
+    });
 
-    while (queue.size > 0) {
+    // Dijkstra's algorithm
+    const distances: { [key: string]: number } = {};
+    const previous: { [key: string]: string | null } = {};
+    const unvisited = new Set(this.nodes.map(n => n.id));
+
+    // Initialize distances
+    this.nodes.forEach(node => {
+      distances[node.id] = node.id === startNode.id ? 0 : Infinity;
+      previous[node.id] = null;
+    });
+
+    while (unvisited.size > 0) {
       // Find unvisited node with minimum distance
-      let current = '';
-      let minDistance = Infinity;
-      queue.forEach(nodeId => {
-        const distance = distances.get(nodeId) || Infinity;
-        if (distance < minDistance) {
-          minDistance = distance;
-          current = nodeId;
+      let currentNode: string | null = null;
+      for (const nodeId of unvisited) {
+        if (currentNode === null || distances[nodeId] < distances[currentNode]) {
+          currentNode = nodeId;
         }
-      });
+      }
 
-      if (current === '' || minDistance === Infinity) break;
+      if (currentNode === null || distances[currentNode] === Infinity) break;
 
-      queue.delete(current);
-      visited.add(current);
+      unvisited.delete(currentNode);
 
-      // If we reached the destination
-      if (current === end) break;
-
-      // Check all neighbors
-      const edges = this.graph.edges.get(current) || [];
-      edges.forEach(edge => {
-        if (visited.has(edge.to)) return;
-
-        const alt = (distances.get(current) || 0) + edge.weight;
-        if (alt < (distances.get(edge.to) || Infinity)) {
-          distances.set(edge.to, alt);
-          previous.set(edge.to, current);
+      // Update distances to neighbors
+      for (const neighbor of graph[currentNode] || []) {
+        if (unvisited.has(neighbor.node)) {
+          const alt = distances[currentNode] + neighbor.distance;
+          if (alt < distances[neighbor.node]) {
+            distances[neighbor.node] = alt;
+            previous[neighbor.node] = currentNode;
+          }
         }
-      });
+      }
+
+      if (currentNode === endNode.id) break;
     }
 
-    // Reconstruct path - FIXED: Ensure path includes the farm
+    // Reconstruct path
     const path: string[] = [];
-    let current: string | null = end;
-    
-    // Build path from end to start
+    let current: string | null = endNode.id;
     while (current !== null) {
       path.unshift(current);
-      current = previous.get(current) || null;
+      current = previous[current];
     }
 
-    // Ensure farm is included in the path if it's not already
-    if (path.length === 0 || path[0] !== 'farm') {
-      path.unshift('farm');
-    }
-
-    // Calculate total distance including direct distances to start/end points
-    const farmNode = this.graph.nodes.get('farm')!;
-    const endNode = this.graph.nodes.get(end);
+    const waypoints = path.map(nodeId => this.nodes.find(n => n.id === nodeId)!);
     
-    // Handle case where end node doesn't exist
-    if (!endNode) {
-      throw new Error(`End node '${end}' not found in graph`);
-    }
-
-    const directDistanceToEnd = this.calculateDistance(endNode.lat, endNode.lng, endLat, endLng);
-    const pathDistance = distances.get(end) || 0;
-    
-    // If no path was found, calculate direct distance from farm
-    const totalDistance = pathDistance === Infinity 
-      ? this.calculateDistance(farmNode.lat, farmNode.lng, endLat, endLng)
-      : pathDistance + directDistanceToEnd;
+    // Add distance from start to first node and from last node to end
+    const totalDistance = distances[endNode.id] + 
+      this.calculateDistance(startLat, startLng, startNode.lat, startNode.lng) +
+      this.calculateDistance(endNode.lat, endNode.lng, endLat, endLng);
 
     return {
-      path,
       distance: totalDistance,
-      duration: this.estimateDuration(totalDistance),
-      waypoints: path.map(nodeId => {
-        const node = this.graph.nodes.get(nodeId);
-        if (!node) {
-          console.warn(`Warning: Node '${nodeId}' not found in graph`);
-          return { id: nodeId, lat: 0, lng: 0, name: `Unknown (${nodeId})` };
-        }
-        return node;
-      }),
-      destination: { lat: endLat, lng: endLng },
-      success: pathDistance !== Infinity
+      waypoints
     };
-  }
-
-  // Estimate duration based on distance and road types
-  private estimateDuration(distance: number): number {
-    // Average speed: 40 km/h in city traffic
-    return Math.round((distance / 40) * 60); // in minutes
-  }
-
-  // Add method to get all available nodes (useful for debugging)
-  public getAvailableNodes(): Node[] {
-    return Array.from(this.graph.nodes.values());
-  }
-
-  // Add method to check if path exists between two nodes
-  public hasPath(startNodeId: string, endNodeId: string): boolean {
-    const visited = new Set<string>();
-    const queue = [startNodeId];
-    
-    while (queue.length > 0) {
-      const current = queue.shift()!;
-      if (current === endNodeId) return true;
-      if (visited.has(current)) continue;
-      
-      visited.add(current);
-      const edges = this.graph.edges.get(current) || [];
-      edges.forEach(edge => {
-        if (!visited.has(edge.to)) {
-          queue.push(edge.to);
-        }
-      });
-    }
-    
-    return false;
   }
 }
 
 export { DijkstraPathfinder };
-export type { Node, Edge, Graph };
