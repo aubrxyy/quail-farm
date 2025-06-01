@@ -59,11 +59,23 @@ export async function POST(request: Request) {
     }
     
     // Create address
+    const addressData: any = {
+      userId: payload.id,
+      label: parsed.data.label,
+      address: parsed.data.address,
+      city: parsed.data.city,
+      district: parsed.data.district,
+      postalCode: parsed.data.postalCode,
+      country: parsed.data.country,
+    };
+    if (parsed.data.latitude !== undefined) {
+      addressData.latitude = parsed.data.latitude;
+    }
+    if (parsed.data.longitude !== undefined) {
+      addressData.longitude = parsed.data.longitude;
+    }
     const address = await prisma.address.create({
-      data: {
-        ...parsed.data,
-        userId: payload.id,
-      }
+      data: addressData
     });
     
     return NextResponse.json(address, { status: 201 });
