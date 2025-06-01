@@ -4,6 +4,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { FaTrash } from 'react-icons/fa';
+import Header from '../_components/Header';
+import { Footer } from '../_components/Footer';
 
 const poppR = Poppins({ subsets: ['latin'], weight: '400' });
 const poppB = Poppins({ subsets: ['latin'], weight: '700' });
@@ -52,8 +54,10 @@ export default function CartPage() {
   );
 
   return (
-    <div className={`bg-[#F7F4E8] min-h-screen p-10 flex flex-col items-start text-black ${poppR.className}`}>
-      <Link href="/" className="text-black hover:underline text-left mb-2">
+    <>
+      <Header />
+    <div className={`bg-[#F7F4E8] min-h-screen p-10 pt-28 flex flex-col items-start text-black ${poppR.className}`}>
+      <Link href="/" className="text-black hover:underline px-30 text-left">
         &lt; Kembali ke homepage
       </Link>
       <div className='container mx-auto py-10 px-4 sm:px-16'>
@@ -153,6 +157,8 @@ export default function CartPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+      <Footer />
+      </>
   );
 }
