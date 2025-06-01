@@ -56,7 +56,7 @@ export default function NewEmployeePage() {
 
   return (
     <div className="flex text-black bg-bright-egg-white min-h-screen">
-      <div className="px-8 pt-24 flex flex-col gap-y-6 w-full max-w-4xl mx-auto">
+      <div className=" pt-24 flex flex-col gap-y-6 w-full max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4 mb-6">
           <Link href="/admin/employees" className="text-blue-600 hover:text-blue-800">

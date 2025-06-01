@@ -19,7 +19,7 @@ export async function GET(request: Request) {
     const search = searchParams.get('search');
 
     // Build where clause
-    let whereClause: any = {};
+    const whereClause: any = {};
 
     if (status && status !== 'all') {
       whereClause.status = status.toUpperCase();

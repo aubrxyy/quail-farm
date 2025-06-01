@@ -224,39 +224,39 @@ export default function DashboardPage() {
 
   return (
     <div className="flex text-black bg-bright-egg-white min-h-screen">
-      <div className="px-8 pt-4 flex flex-col gap-y-6 w-full">
+    <div className="px-8 pt-4 flex flex-col gap-y-6 w-full">
+      
+      {/* Header with Tabs */}
+      <div>
+        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+        <p className="text-gray-600 mt-1">Welcome back! Here&apos;s what&apos;s happening with your quail farm.</p>
         
-        {/* Header with Tabs */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome back! Here's what's happening with your quail farm.</p>
-          
-          {/* Tab Navigation */}
-          <div className="mt-4 border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              <button
-                onClick={() => setActiveTab('overview')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'overview'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Overview
-              </button>
-              <button
-                onClick={() => setActiveTab('monthly')}
-                className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                  activeTab === 'monthly'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                Monthly Summary
-              </button>
-            </nav>
-          </div>
+        {/* Tab Navigation */}
+        <div className="mt-4 border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'overview'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('monthly')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                activeTab === 'monthly'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Monthly Summary
+            </button>
+          </nav>
         </div>
+      </div>
 
         {/* Error Message */}
         {error && (
@@ -379,7 +379,7 @@ export default function DashboardPage() {
                       <div key={order.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                         <div>
                           <p className="font-medium text-sm">{order.customerName}</p>
-                          <p className="text-xs text-gray-500">{order.product?.name || 'Unknown Product'} × {order.orderAmount}</p>
+                          <p className="text-xs text-gray-500">{order.product?.name || 'Unknown Product'} x {order.orderAmount}</p>
                           <p className="text-xs text-gray-400">
                             {new Date(order.orderDate).toLocaleDateString('id-ID')}
                           </p>
