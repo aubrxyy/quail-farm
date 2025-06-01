@@ -1,7 +1,23 @@
 'use client';
 
-import OrderMap from '@/app/_components/OrderMap';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
+import dynamicImport from 'next/dynamic';
+
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
+
+// Dynamically import OrderMap with no SSR to prevent useSearchParams issues
+const OrderMap = dynamicImport(() => import('@/app/_components/OrderMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+      <div className="animate-pulse">
+        <div className="h-6 bg-gray-300 rounded w-64 mb-4"></div>
+        <div className="h-96 bg-gray-300 rounded-lg"></div>
+      </div>
+    </div>
+  )
+});
 
 interface Product {
   id: number;
@@ -53,7 +69,8 @@ interface DashboardStats {
   pendingOrders: number;
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
+  // ... rest of your existing code remains exactly the same
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [extraCosts, setExtraCosts] = useState<ExtraCost[]>([]);
@@ -111,7 +128,6 @@ export default function DashboardPage() {
       } else {
         console.error('Extra costs fetch failed:', extraCostsRes.status);
       }
-
 
     } catch (err) {
       setError('Failed to fetch dashboard data');
@@ -224,39 +240,39 @@ export default function DashboardPage() {
 
   return (
     <div className="flex text-black bg-bright-egg-white min-h-screen">
-    <div className="px-8 pt-4 flex flex-col gap-y-6 w-full">
-      
-      {/* Header with Tabs */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Welcome back! Here&apos;s what&apos;s happening with your quail farm.</p>
+      <div className="px-8 pt-4 flex flex-col gap-y-6 w-full">
         
-        {/* Tab Navigation */}
-        <div className="mt-4 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'overview'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Overview
-            </button>
-            <button
-              onClick={() => setActiveTab('monthly')}
-              className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'monthly'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Monthly Summary
-            </button>
-          </nav>
+        {/* Header with Tabs */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-gray-600 mt-1">Welcome back! Here&apos;s what&apos;s happening with your quail farm.</p>
+          
+          {/* Tab Navigation */}
+          <div className="mt-4 border-b border-gray-200">
+            <nav className="-mb-px flex space-x-8">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'overview'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Overview
+              </button>
+              <button
+                onClick={() => setActiveTab('monthly')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm ${
+                  activeTab === 'monthly'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Monthly Summary
+              </button>
+            </nav>
+          </div>
         </div>
-      </div>
 
         {/* Error Message */}
         {error && (
@@ -362,13 +378,14 @@ export default function DashboardPage() {
               )}
             </div>
 
-            {/* NEW: Real Road Routing Map */}
+            {/* Map Section - Dynamically imported with no SSR */}
             <OrderMap orders={transformedOrders} farmLocation={farmAddress} />
 
+            {/* Rest of your existing code... */}
             {/* Recent Orders, Low Stock & Quick Actions */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              {/* Recent Orders - Now Scrollable */}
+              {/* Recent Orders */}
               <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-700 mb-4">Recent Orders</h2>
                 <div className="space-y-3 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
@@ -602,5 +619,35 @@ export default function DashboardPage() {
 
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex text-black bg-bright-egg-white min-h-screen">
+      <div className="px-8 pt-4 flex flex-col gap-y-6 w-full">
+        <div className="animate-pulse space-y-4">
+          <div className="h-8 bg-gray-300 rounded w-48"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-32 bg-gray-300 rounded-xl"></div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {[1, 2].map(i => (
+              <div key={i} className="h-64 bg-gray-300 rounded-xl"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <DashboardContent />
+    </Suspense>
   );
 }

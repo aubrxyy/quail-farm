@@ -1,10 +1,24 @@
-'use client'
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
-export default function NewEmployeePage() {
+function LoadingFallback() {
+  return (
+    <div className="flex text-black bg-bright-egg-white min-h-screen">
+      <div className="pt-24 flex flex-col gap-y-6 w-full max-w-5xl mx-auto">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-lg text-gray-600">Loading...</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NewEmployeeForm() {
+  'use client'
+  
+  const { useRouter } = require('next/navigation');
+  const { useState } = require('react');
+  
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -227,5 +241,13 @@ export default function NewEmployeePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function NewEmployeePage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <NewEmployeeForm />
+    </Suspense>
   );
 }

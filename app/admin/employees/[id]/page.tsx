@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -16,7 +16,7 @@ interface Employee {
   hireDate: string;
 }
 
-export default function EditEmployeePage() {
+function EditEmployeeContent() {
   const router = useRouter();
   const params = useParams();
   const [loading, setLoading] = useState(false);
@@ -304,5 +304,26 @@ export default function EditEmployeePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex text-black bg-bright-egg-white min-h-screen">
+      <div className="px-8 pt-24 flex flex-col gap-y-6 w-full max-w-4xl mx-auto">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-300 rounded w-64 mb-6"></div>
+          <div className="h-96 bg-gray-300 rounded-xl"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function EditEmployeePage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <EditEmployeeContent />
+    </Suspense>
   );
 }

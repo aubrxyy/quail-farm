@@ -48,6 +48,8 @@ const DATE_FILTERS = [
   { value: 'last-month', label: 'Last Month' }
 ];
 
+export const dynamic = 'force-dynamic'; // Ensure this page is always dynamic
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);

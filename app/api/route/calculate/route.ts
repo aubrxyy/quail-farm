@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  let farmLat: number = 0, farmLng: number = 0, customerLat: number = 0, customerLng: number = 0;
   try {
-    const { farmLat, farmLng, customerLat, customerLng } = await request.json();
+    ({ farmLat, farmLng, customerLat, customerLng } = await request.json());
     
     // Using OpenRouteService (free tier available)
     const API_KEY = process.env.OPENROUTE_API_KEY;

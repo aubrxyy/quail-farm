@@ -1,8 +1,10 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+
+export const dynamic = 'force-dynamic'; // Ensure this page is always dynamic
 
 interface Employee {
   id: number;           // Auto-incrementing primary key
@@ -16,7 +18,7 @@ interface Employee {
   phone: string;
 }
 
-export default function EmployeesPage() {
+function EmployeesContent() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState('all');
@@ -282,9 +284,33 @@ export default function EmployeesPage() {
             </>
           )}
         </div>
-
-        
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex text-black bg-bright-egg-white min-h-screen">
+      <div className="px-8 pt-24 flex flex-col gap-y-6 w-full">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-300 rounded w-64 mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-6">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="h-24 bg-gray-300 rounded-xl"></div>
+            ))}
+          </div>
+          <div className="h-64 bg-gray-300 rounded-xl"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function EmployeesPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <EmployeesContent />
+    </Suspense>
   );
 }

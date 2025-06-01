@@ -1,8 +1,11 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+
+// Force dynamic rendering for this page
+export const dynamic = 'force-dynamic';
 
 interface FinanceData {
   summary: {
@@ -31,7 +34,7 @@ interface FinanceData {
   };
 }
 
-export default function FinancesPage() {
+function FinancesContent() {
   const [financeData, setFinanceData] = useState<FinanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [period, setPeriod] = useState('month');
@@ -414,5 +417,31 @@ export default function FinancesPage() {
         </div>
       )}
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex text-black bg-bright-egg-white min-h-screen">
+      <div className="px-8 pt-24 flex flex-col gap-y-6 w-full">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-300 rounded w-64 mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 w-full mb-6">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-24 bg-gray-300 rounded-xl"></div>
+            ))}
+          </div>
+          <div className="h-64 bg-gray-300 rounded-xl"></div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function FinancesPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <FinancesContent />
+    </Suspense>
   );
 }

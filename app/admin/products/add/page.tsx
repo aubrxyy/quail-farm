@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
+export const dynamic = 'force-dynamic'; // Force dynamic rendering for this page
+
 export default function AddProductPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
