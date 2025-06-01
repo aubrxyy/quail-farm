@@ -21,10 +21,10 @@ async function saveImage(imageFile: File): Promise<string> {
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params;
+    const { id } = await params; // Await params to get the id
     const productId = parseInt(id);
 
     const product = await prisma.product.findUnique({
@@ -43,10 +43,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params;
+    const { id } = await params; // Await params to get the id
     const productId = parseInt(id);
 
     // Parse form data
@@ -93,10 +93,10 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params;
+    const { id } = await params; // Await params to get the id
     const productId = parseInt(id);
 
     await prisma.product.delete({ where: { id: productId } });

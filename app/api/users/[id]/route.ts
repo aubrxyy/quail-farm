@@ -15,10 +15,10 @@ const updateUserSchema = z.object({
 
 export async function GET(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params; // Await params
+    const { id } = await params // Await params
     const userId = parseInt(id);
 
     const user = await prisma.user.findUnique({
@@ -45,10 +45,10 @@ export async function GET(
 
 export async function PUT(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-      const { id } = await context.params; // Await params
+      const { id } = await params; // Await params
       const userId = parseInt(id);
     
       const session = (await cookies()).get('session')?.value;
@@ -98,10 +98,10 @@ export async function PUT(
 
 export async function DELETE(
   request: Request,
-  context: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = await context.params; // Await params
+    const { id } = await params; // Await params
     const userId = parseInt(id);
 
     await prisma.user.delete({ where: { id: userId } });

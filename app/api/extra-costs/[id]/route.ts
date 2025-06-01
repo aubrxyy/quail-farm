@@ -9,8 +9,9 @@ const updateExtraCostSchema = z.object({
   date: z.string().optional(),
 });
 
-export async function PUT(request: Request, { params }: { params: { id: string } }) {
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params; // Await params to get the id
     const body = await request.json();
     const parsed = updateExtraCostSchema.safeParse(body);
     
@@ -19,7 +20,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     }
     
     const extraCost = await prisma.extraCost.update({
-      where: { id: parseInt(params.id) },
+      where: { id: parseInt(id) },
       data: {
         name: parsed.data.name,
         amount: parsed.data.amount,

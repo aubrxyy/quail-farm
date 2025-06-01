@@ -7,10 +7,11 @@ import { updateInventoryOnStatusChange } from '@/lib/inventory';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const orderId = parseInt(params.id);
+    const { id } = await params; // Await params
+    const orderId = parseInt(id);
     
     const order = await prisma.order.findUnique({
       where: { id: orderId },
@@ -33,7 +34,7 @@ export async function GET(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     // Check authentication
@@ -44,7 +45,8 @@ export async function PATCH(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const orderId = parseInt(params.id);
+    const { id } = await params; // Await params
+    const orderId = parseInt(id);
     const { status } = await request.json();
 
     // Get current order
