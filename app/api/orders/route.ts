@@ -8,10 +8,6 @@ export async function GET(request: Request) {
     // Check authentication
     const session = (await cookies()).get('session')?.value;
     const payload = await decrypt(session);
-    
-    if (!payload || payload.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     // Get URL search parameters
     const { searchParams } = new URL(request.url);
