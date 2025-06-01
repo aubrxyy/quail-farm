@@ -1,5 +1,5 @@
 'use client';
-import React from 'react';
+import React, { Suspense } from 'react';
 import AdminHeader from './Header';
 import AdminNavbar from './Navbar';
 
@@ -19,7 +19,9 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <div className="flex-1 ml-60">
         {/* Fixed Header */}
         <div className="fixed top-0 right-0 left-60 z-10 bg-white shadow-sm">
-          <AdminHeader />
+          <Suspense fallback={null}>
+            <AdminHeader />
+          </Suspense>
         </div>
         
         {/* Main Content with proper spacing */}
