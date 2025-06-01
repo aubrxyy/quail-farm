@@ -13,7 +13,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { id } = await params; // Await params
+    const { id } = await params; 
     const addressId = id;
 
     // Fetch the address by ID
