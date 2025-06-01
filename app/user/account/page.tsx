@@ -5,6 +5,16 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Icon } from "@iconify/react";
 
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  phone?: string;
+  role: 'ADMIN' | 'USER';
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Toast Component
 const Toast = ({ message, type, onClose }: { message: string, type: 'success' | 'error', onClose: () => void }) => {
   useEffect(() => {
@@ -93,7 +103,7 @@ export default function AccountDetail() {
       if (res.ok) {
         setToast({ message: "Profil berhasil diperbarui!", type: "success" });
         // Update user state
-        setUser(prev => ({ ...prev, name: fullName, email, phone }));
+        setUser((prev: User) => ({ ...prev!, name: fullName, email, phone }));
       } else {
         const error = await res.json();
         setToast({ message: error.error || "Gagal memperbarui profil.", type: "error" });
