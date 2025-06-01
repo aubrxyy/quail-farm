@@ -1,138 +1,88 @@
-import { prisma } from '@/lib/prisma';
-import { decrypt } from '@/lib/session';
-import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
+import { prisma } from '@/lib/prisma';
+import { cookies } from 'next/headers';
+import { decrypt } from '@/lib/session';
 
-// Define schema for address updates
-const updateAddressSchema = z.object({
-  street: z.string().min(1, 'Street is required').optional(),
-  city: z.string().min(1, 'City is required').optional(),
-  province: z.string().min(1, 'Province is required').optional(),
-  postalCode: z.string().min(1, 'Postal code is required').optional(),
-});
-
-// Get a specific address
-export async function GET(
-  req: Request,
-  context: { params: { id: string } }
-) {
+export async function GET(request: Request) {
   try {
-    // Get the session from cookies
-    const cookieStore = await cookies();
-    const session = cookieStore.get('session')?.value;
+    // Check authentication
+    const session = (await cookies()).get('session')?.value;
     const payload = await decrypt(session);
-
-    if (!payload) {
+    
+    if (!payload || payload.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const addressId = parseInt(context.params.id);
+    // Get URL search parameters
+    const { searchParams } = new URL(request.url);
+    const status = searchParams.get('status');
+    const search = searchParams.get('search');
 
-    // Get the address and verify ownership
-    const address = await prisma.address.findFirst({
-      where: {
-        id: addressId,
-        userId: payload.id,
+    // Build where clause
+    const whereClause: any = {};
+
+    if (status && status !== 'all') {
+      whereClause.status = status.toUpperCase();
+    }
+
+    if (search) {
+      // Create OR conditions for search
+      const searchConditions: any[] = [
+        { customerName: { contains: search, mode: 'insensitive' } },
+        { customerAddress: { contains: search, mode: 'insensitive' } },
+        // Search in related user data
+        { user: { name: { contains: search, mode: 'insensitive' } } },
+        { user: { email: { contains: search, mode: 'insensitive' } } },
+        // Search in related product data
+        { product: { name: { contains: search, mode: 'insensitive' } } }
+      ];
+
+      // Add ID search if the search term is a number
+      if (!isNaN(Number(search))) {
+        searchConditions.push({ id: Number(search) });
+      }
+
+      whereClause.OR = searchConditions;
+    }
+
+    // Fetch orders with product and user information
+    const orders = await prisma.order.findMany({
+      where: whereClause,
+      include: {
+        product: {
+          select: {
+            id: true,
+            name: true,
+            gambar: true,
+            harga: true
+          }
+        },
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        address: {
+          select: {
+            id: true,
+            latitude: true,
+            longitude: true,
+            address: true,
+            city: true,
+            district: true,
+            postalCode: true,
+            country: true
+          }
+        }
       },
+      orderBy: { createdAt: 'desc' }
     });
 
-    if (!address) {
-      return NextResponse.json({ error: 'Address not found' }, { status: 404 });
-    }
-
-    return NextResponse.json(address);
+    return NextResponse.json(orders);
   } catch (error) {
-    console.error('Error fetching address:', error);
-    return NextResponse.json({ error: 'Failed to fetch address' }, { status: 500 });
-  }
-}
-
-// Update an address
-export async function PUT(
-  req: Request,
-  context: { params: { id: string } }
-) {
-  try {
-    // Get the session from cookies
-    const cookieStore = await cookies();
-    const session = cookieStore.get('session')?.value;
-    const payload = await decrypt(session);
-
-    if (!payload) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const addressId = parseInt(context.params.id);
-    const body = await req.json();
-    const parsed = updateAddressSchema.safeParse(body);
-
-    if (!parsed.success) {
-      return NextResponse.json({ error: parsed.error.issues }, { status: 400 });
-    }
-
-    // Verify address ownership before updating
-    const existingAddress = await prisma.address.findFirst({
-      where: {
-        id: addressId,
-        userId: payload.id,
-      },
-    });
-
-    if (!existingAddress) {
-      return NextResponse.json({ error: 'Address not found' }, { status: 404 });
-    }
-
-    // Update the address
-    const address = await prisma.address.update({
-      where: { id: addressId },
-      data: parsed.data,
-    });
-
-    return NextResponse.json(address);
-  } catch (error) {
-    console.error('Error updating address:', error);
-    return NextResponse.json({ error: 'Failed to update address' }, { status: 500 });
-  }
-}
-
-// Delete an address
-export async function DELETE(
-  req: Request,
-  context: { params: { id: string } }
-) {
-  try {
-    // Get the session from cookies
-    const cookieStore = await cookies();
-    const session = cookieStore.get('session')?.value;
-    const payload = await decrypt(session);
-
-    if (!payload) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const addressId = parseInt(context.params.id);
-
-    // Verify address ownership before deleting
-    const existingAddress = await prisma.address.findFirst({
-      where: {
-        id: addressId,
-        userId: payload.id,
-      },
-    });
-
-    if (!existingAddress) {
-      return NextResponse.json({ error: 'Address not found' }, { status: 404 });
-    }
-
-    // Delete the address
-    await prisma.address.delete({
-      where: { id: addressId },
-    });
-
-    return NextResponse.json({ message: 'Address deleted successfully' });
-  } catch (error) {
-    console.error('Error deleting address:', error);
-    return NextResponse.json({ error: 'Failed to delete address' }, { status: 500 });
+    console.error('Error fetching orders:', error);
+    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
   }
 }
