@@ -3,86 +3,40 @@ import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { decrypt } from '@/lib/session';
 
-export async function GET(request: Request) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Check authentication
     const session = (await cookies()).get('session')?.value;
     const payload = await decrypt(session);
-    
+
     if (!payload || payload.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Get URL search parameters
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const search = searchParams.get('search');
+    const { id } = await params; // Await params
+    const addressId = id;
 
-    // Build where clause
-    const whereClause: any = {};
-
-    if (status && status !== 'all') {
-      whereClause.status = status.toUpperCase();
-    }
-
-    if (search) {
-      // Create OR conditions for search
-      const searchConditions: any[] = [
-        { customerName: { contains: search, mode: 'insensitive' } },
-        { customerAddress: { contains: search, mode: 'insensitive' } },
-        // Search in related user data
-        { user: { name: { contains: search, mode: 'insensitive' } } },
-        { user: { email: { contains: search, mode: 'insensitive' } } },
-        // Search in related product data
-        { product: { name: { contains: search, mode: 'insensitive' } } }
-      ];
-
-      // Add ID search if the search term is a number
-      if (!isNaN(Number(search))) {
-        searchConditions.push({ id: Number(search) });
-      }
-
-      whereClause.OR = searchConditions;
-    }
-
-    // Fetch orders with product and user information
-    const orders = await prisma.order.findMany({
-      where: whereClause,
+    // Fetch the address by ID
+    const address = await prisma.address.findUnique({
+      where: { id: Number(addressId) },
       include: {
-        product: {
-          select: {
-            id: true,
-            name: true,
-            gambar: true,
-            harga: true
-          }
-        },
         user: {
           select: {
             id: true,
             name: true,
             email: true
           }
-        },
-        address: {
-          select: {
-            id: true,
-            latitude: true,
-            longitude: true,
-            address: true,
-            city: true,
-            district: true,
-            postalCode: true,
-            country: true
-          }
         }
-      },
-      orderBy: { createdAt: 'desc' }
+      }
     });
 
-    return NextResponse.json(orders);
+    if (!address) {
+      return NextResponse.json({ error: 'Address not found' }, { status: 404 });
+    }
+
+    return NextResponse.json(address);
   } catch (error) {
-    console.error('Error fetching orders:', error);
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 });
+    console.error('Error fetching address:', error);
+    return NextResponse.json({ error: 'Failed to fetch address' }, { status: 500 });
   }
 }
